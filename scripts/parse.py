@@ -1,6 +1,7 @@
 """Parse monthly Excel files into Markdown and index.json."""
 
 import json
+import re
 import sys
 from collections import OrderedDict
 from pathlib import Path
@@ -13,6 +14,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 EXCEL_DIR = BASE_DIR / "excel"
 DATA_DIR = BASE_DIR / "data"
 MAPPING_FILE = BASE_DIR / "team-mapping.yaml"
+
+
+def extract_month(filepath):
+    """Extract YYYY-MM from filename like 'EC团队经营数据汇总202603.xlsx'.
+
+    Returns (month_key, month_label) e.g. ('2026-03', '2026年03月').
+    """
+    # Find the last 6-digit number in the filename
+    matches = re.findall(r"(\d{6})", filepath.name)
+    if not matches:
+        raise ValueError(f"Cannot find YYYYMM in filename: {filepath.name}")
+    yyyymm = matches[-1]
+    if len(yyyymm) != 6:
+        raise ValueError(f"Invalid date suffix in filename: {filepath.name}")
+    yyyy = yyyymm[:4]
+    mm = yyyymm[4:6]
+    return f"{yyyy}-{mm}", f"{yyyy}年{mm}月"
 
 
 def load_mapping():
@@ -167,23 +185,28 @@ def main():
     months_list = []
 
     for fp in excel_files:
-        month = fp.stem
-        print(f"Processing: {fp.name}")
+        try:
+            month_key, month_label = extract_month(fp)
+        except ValueError as e:
+            print(f"  ERROR: {e}")
+            continue
+
+        print(f"Processing: {fp.name} -> {month_key}")
         try:
             headers, metrics = parse_excel(fp, mapping)
         except Exception as e:
             print(f"  ERROR: {e}")
             continue
 
-        md = generate_markdown(month, headers, metrics)
-        out_path = DATA_DIR / f"{month}.md"
+        md = generate_markdown(month_label, headers, metrics)
+        out_path = DATA_DIR / f"{month_key}.md"
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(md)
         print(
             f"  -> {out_path}  ({len(metrics)} metrics, {len(headers)} teams)"
         )
 
-        months_list.append(month)
+        months_list.append(month_key)
         all_metrics.update(metrics.keys())
 
     index = generate_index(sorted(months_list), all_metrics, mapping)

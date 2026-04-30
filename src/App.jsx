@@ -37,7 +37,7 @@ export default function App() {
 
       <main className="app-main">
         {view === "monthly" ? (
-          <MonthlyTable data={currentMonthData} mapping={index} />
+          <MonthlyTable key={selectedMonth} data={currentMonthData} mapping={index} />
         ) : (
           <TrendChart months={months} index={index} />
         )}

@@ -111,8 +111,34 @@ body {
   color: #374151;
   white-space: nowrap;
   position: sticky;
+  left: 28px;
+  z-index: 2;
+  padding: 8px 12px;
+}
+
+.monthly-table thead th.metric-header {
+  position: sticky;
+  left: 28px;
+  z-index: 3;
+  background: #f0f4ff;
+}
+
+.toggle-col {
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  position: sticky;
   left: 0;
-  z-index: 1;
+  z-index: 2;
+  background: #f0f4ff;
+}
+
+.toggle-cell {
+  text-align: center;
+  padding: 2px 4px;
+  position: sticky;
+  left: 0;
+  z-index: 2;
 }
 
 .row-toggle {
@@ -121,7 +147,6 @@ body {
   justify-content: center;
   width: 20px;
   height: 20px;
-  margin-right: 6px;
   border: 1px solid #d1d5db;
   border-radius: 4px;
   background: #fff;
@@ -130,21 +155,79 @@ body {
   cursor: pointer;
   color: #6b7280;
   padding: 0;
-  vertical-align: middle;
 }
 
 .row-toggle:hover {
-  background: #e5e7eb;
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.metric-label.child {
+  padding-left: 20px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.sub-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+  margin-right: 6px;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.sub-toggle:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.section-spacer td {
+  height: 12px;
+  padding: 0;
+  border: none;
+  background: #f5f5f5;
+}
+
+/* Metric picker */
+.metric-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.metric-tag {
+  padding: 4px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
   color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
-.row-collapsed .metric-label {
-  color: #9ca3af;
-  font-weight: 500;
+.metric-tag:hover {
+  border-color: #2563eb;
+  color: #2563eb;
 }
 
-.row-collapsed td {
-  color: transparent;
+.metric-tag.selected {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
 }
 
 .table-wrapper {
@@ -154,7 +237,7 @@ body {
 .monthly-table table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 12px;
   white-space: nowrap;
 }
 

@@ -143,8 +143,22 @@ body {
   background: #fff;
 }
 
+.monthly-table tbody td.aggregate {
+  font-weight: 700;
+  color: #111827;
+  background: #f0f4ff;
+}
+
+.monthly-table tbody td.negative {
+  color: #dc2626;
+}
+
 .monthly-table tbody tr:hover td {
   background: #f9fafb;
+}
+
+.monthly-table tbody tr:hover td.aggregate {
+  background: #e0e7ff;
 }
 
 /* TrendChart */

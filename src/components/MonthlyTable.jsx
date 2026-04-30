@@ -8,10 +8,18 @@ export default function MonthlyTable({ data, mapping }) {
   const { title, metrics } = data;
   const colGroups = buildColumnGroups(mapping);
 
-  // Collect all metric names and values in order
-  const metricEntries = Object.entries(metrics);
+  // Build set of aggregate column names (subteams + boss) for bold styling
+  const aggregateCols = new Set();
+  if (colGroups) {
+    for (const g of colGroups.groups) {
+      for (const sg of g.subGroups) {
+        aggregateCols.add(sg.subTeam);
+      }
+    }
+    aggregateCols.add(colGroups.boss);
+  }
 
-  // All metrics should have the same headers; use the first one's headers
+  const metricEntries = Object.entries(metrics);
   const firstEntry = metricEntries[0];
   const orderedHeaders = firstEntry ? firstEntry[1].headers : [];
 
@@ -32,8 +40,16 @@ export default function MonthlyTable({ data, mapping }) {
                 {headers.map((h) => {
                   const idx = orderedHeaders.indexOf(h);
                   const v = idx >= 0 ? values[idx] : null;
+                  const isAggregate = aggregateCols.has(h);
+                  const isNegative = typeof v === "number" && v < 0;
+                  const cls = [
+                    isAggregate ? "aggregate" : "",
+                    isNegative ? "negative" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
                   return (
-                    <td key={h}>
+                    <td key={h} className={cls || undefined}>
                       {v === null || v === undefined ? "-" : v}
                     </td>
                   );

@@ -115,6 +115,38 @@ body {
   z-index: 1;
 }
 
+.row-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.row-toggle:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.row-collapsed .metric-label {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.row-collapsed td {
+  color: transparent;
+}
+
 .table-wrapper {
   overflow-x: auto;
 }

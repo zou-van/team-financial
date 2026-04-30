@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { buildColumnGroups } from "../lib/loadData";
 
 export default function MonthlyTable({ data, mapping }) {
@@ -7,6 +8,19 @@ export default function MonthlyTable({ data, mapping }) {
 
   const { title, metrics } = data;
   const colGroups = buildColumnGroups(mapping);
+  const [collapsed, setCollapsed] = useState(new Set());
+
+  const toggleRow = (name) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) {
+        next.delete(name);
+      } else {
+        next.add(name);
+      }
+      return next;
+    });
+  };
 
   // Build set of aggregate column names from colGroups output
   const aggregateCols = new Set(colGroups?.aggregateColumns || []);
@@ -26,28 +40,40 @@ export default function MonthlyTable({ data, mapping }) {
             <SimpleHeader headers={orderedHeaders} />
           )}
           <tbody>
-            {metricEntries.map(([metricName, { headers, values }]) => (
-              <tr key={metricName}>
-                <th className="metric-label">{metricName}</th>
-                {headers.map((h) => {
-                  const idx = orderedHeaders.indexOf(h);
-                  const v = idx >= 0 ? values[idx] : null;
-                  const isAggregate = aggregateCols.has(h);
-                  const isNegative = typeof v === "number" && v < 0;
-                  const cls = [
-                    isAggregate ? "aggregate" : "",
-                    isNegative ? "negative" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ");
-                  return (
-                    <td key={h} className={cls || undefined}>
-                      {v === null || v === undefined ? "-" : v}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {metricEntries.map(([metricName, { headers, values }]) => {
+              const isCollapsed = collapsed.has(metricName);
+              return (
+                <tr key={metricName} className={isCollapsed ? "row-collapsed" : ""}>
+                  <th className="metric-label">
+                    <button
+                      className="row-toggle"
+                      onClick={() => toggleRow(metricName)}
+                      title={isCollapsed ? "展开" : "收起"}
+                    >
+                      {isCollapsed ? "+" : "−"}
+                    </button>
+                    {metricName}
+                  </th>
+                  {headers.map((h) => {
+                    const idx = orderedHeaders.indexOf(h);
+                    const v = idx >= 0 ? values[idx] : null;
+                    const isAggregate = aggregateCols.has(h);
+                    const isNegative = typeof v === "number" && v < 0;
+                    const cls = [
+                      isAggregate ? "aggregate" : "",
+                      isNegative ? "negative" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    return (
+                      <td key={h} className={cls || undefined}>
+                        {isCollapsed ? "" : v === null || v === undefined ? "-" : v}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

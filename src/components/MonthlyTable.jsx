@@ -8,16 +8,8 @@ export default function MonthlyTable({ data, mapping }) {
   const { title, metrics } = data;
   const colGroups = buildColumnGroups(mapping);
 
-  // Build set of aggregate column names (subteams + boss) for bold styling
-  const aggregateCols = new Set();
-  if (colGroups) {
-    for (const g of colGroups.groups) {
-      for (const sg of g.subGroups) {
-        aggregateCols.add(sg.subTeam);
-      }
-    }
-    aggregateCols.add(colGroups.boss);
-  }
+  // Build set of aggregate column names from colGroups output
+  const aggregateCols = new Set(colGroups?.aggregateColumns || []);
 
   const metricEntries = Object.entries(metrics);
   const firstEntry = metricEntries[0];

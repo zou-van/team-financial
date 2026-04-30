@@ -72,17 +72,34 @@ export function buildColumnGroups(index) {
 
   const { boss, leaders } = mapping;
   const groups = [];
+  const aggregateColumns = []; // column names that are subteam/boss aggregates
+  const seen = new Set();
 
   for (const [leader, subTeams] of Object.entries(leaders)) {
     const subGroups = [];
     for (const [subTeam, smallTeams] of Object.entries(subTeams)) {
-      subGroups.push({
-        subTeam,
-        columns: [...smallTeams, subTeam],
-      });
+      const cols = [];
+      // Small teams
+      for (const st of smallTeams) {
+        if (!seen.has(st)) seen.add(st);
+        cols.push(st);
+      }
+      // Subteam column: dedup if name collides (same logic as parse.py)
+      let subName = subTeam;
+      let suffix = 2;
+      while (seen.has(subName)) {
+        subName = `${subTeam}(${suffix})`;
+        suffix++;
+      }
+      seen.add(subName);
+      cols.push(subName);
+      aggregateColumns.push(subName); // last column = aggregate
+      subGroups.push({ subTeam, columns: cols });
     }
     groups.push({ leader, subGroups });
   }
 
-  return { groups, boss };
+  aggregateColumns.push(boss);
+
+  return { groups, boss, aggregateColumns };
 }

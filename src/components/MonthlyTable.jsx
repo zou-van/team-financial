@@ -8,33 +8,41 @@ export default function MonthlyTable({ data, mapping }) {
   const { title, metrics } = data;
   const colGroups = buildColumnGroups(mapping);
 
+  // Collect all metric names and values in order
+  const metricEntries = Object.entries(metrics);
+
+  // All metrics should have the same headers; use the first one's headers
+  const firstEntry = metricEntries[0];
+  const orderedHeaders = firstEntry ? firstEntry[1].headers : [];
+
   return (
     <div className="monthly-table">
       <h2>{title}</h2>
-
-      {Object.entries(metrics).map(([metricName, { headers, values }]) => (
-        <div key={metricName} className="metric-section">
-          <h3>{metricName}</h3>
-          <div className="table-wrapper">
-            <table>
-              {colGroups ? (
-                <GroupedHeader colGroups={colGroups} />
-              ) : (
-                <SimpleHeader headers={headers} />
-              )}
-              <tbody>
-                <tr>
-                  {values.map((v, i) => (
-                    <td key={i}>
+      <div className="table-wrapper">
+        <table>
+          {colGroups ? (
+            <GroupedHeader colGroups={colGroups} />
+          ) : (
+            <SimpleHeader headers={orderedHeaders} />
+          )}
+          <tbody>
+            {metricEntries.map(([metricName, { headers, values }]) => (
+              <tr key={metricName}>
+                <th className="metric-label">{metricName}</th>
+                {headers.map((h) => {
+                  const idx = orderedHeaders.indexOf(h);
+                  const v = idx >= 0 ? values[idx] : null;
+                  return (
+                    <td key={h}>
                       {v === null || v === undefined ? "-" : v}
                     </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ))}
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -46,6 +54,7 @@ function GroupedHeader({ colGroups }) {
     <thead>
       {/* Row 1: Leader names */}
       <tr>
+        <th rowSpan={3}>指标</th>
         {groups.map((g) => {
           const span = g.subGroups.reduce(
             (s, sg) => s + sg.columns.length,
@@ -87,6 +96,7 @@ function SimpleHeader({ headers }) {
   return (
     <thead>
       <tr>
+        <th>指标</th>
         {headers.map((h) => (
           <th key={h}>{h}</th>
         ))}

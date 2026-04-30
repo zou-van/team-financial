@@ -55,20 +55,44 @@ def collect_team_names(mapping):
 
 
 def build_column_order(mapping):
-    """Return ordered column names following mapping hierarchy."""
+    """Return ordered column names following mapping hierarchy.
+
+    Uses unique names when a subteam shares a name with a small team,
+    consistent with the header dedup in parse_excel.
+    """
     if not mapping:
         return None
     order = []
+    seen = set()
     for sub_teams in mapping.get("leaders", {}).values():
         for sub_team, small_teams in sub_teams.items():
-            order.extend(small_teams)
-            order.append(sub_team)
-    order.append(mapping["boss"])
+            for st in small_teams:
+                if st not in seen:
+                    seen.add(st)
+                order.append(st)
+            # Dedup subteam name if it collides
+            unique_sub = sub_team
+            suffix = 2
+            while unique_sub in seen:
+                unique_sub = f"{sub_team}({suffix})"
+                suffix += 1
+            seen.add(unique_sub)
+            order.append(unique_sub)
+    # Boss column
+    boss = mapping["boss"]
+    if boss not in seen:
+        seen.add(boss)
+    order.append(boss)
     return order
 
 
 def parse_excel(filepath, mapping):
     """Parse a single Excel file.
+
+    Excel layout (Sheet '差距分析(团队)'):
+      Row 2: team name headers starting at col 3
+      Row 3: metadata row (skipped)
+      Row 4+: col 1 = section name, col 2 = metric name, cols 3+ = values
 
     Returns (ordered_headers: list[str], metrics: OrderedDict).
     """
@@ -80,12 +104,35 @@ def parse_excel(filepath, mapping):
 
     ws = wb[SHEET_NAME]
 
-    # Read column headers from row 1 (cols 2 onward)
+    # Read team headers from row 2, starting col 3
     headers = []
-    for col in range(2, ws.max_column + 1):
-        val = ws.cell(row=1, column=col).value
-        if val is not None:
-            headers.append(str(val).strip())
+    header_to_excel_col = {}  # header name -> Excel column number (1-based)
+    seen = set()
+
+    for col in range(3, ws.max_column + 1):
+        val = ws.cell(row=2, column=col).value
+        if val is None:
+            continue
+        name = str(val).strip()
+        if not name:
+            continue
+
+        # Deduplicate: Excel may have same name for small team and its aggregate
+        unique_name = name
+        suffix = 2
+        while unique_name in seen:
+            unique_name = f"{name}({suffix})"
+            suffix += 1
+        seen.add(unique_name)
+
+        headers.append(unique_name)
+        header_to_excel_col[unique_name] = col
+
+        if unique_name != name:
+            print(f"  Note: duplicate header '{name}' -> renamed to '{unique_name}'")
+
+    if not headers:
+        raise ValueError("No team headers found in row 2 (cols 3+)")
 
     # Validate against mapping
     expected = collect_team_names(mapping) if mapping else set()
@@ -107,24 +154,43 @@ def parse_excel(filepath, mapping):
     else:
         ordered = list(headers)
 
-    # Build lookup: header name -> column index (0-based)
-    header_to_col = {h: i for i, h in enumerate(headers)}
-
-    # Read data rows
+    # Read data rows (starting row 4, skip row 3 metadata)
     metrics = OrderedDict()
-    for row in range(2, ws.max_row + 1):
-        metric_name = ws.cell(row=row, column=1).value
+    current_section = ""
+
+    for row in range(4, ws.max_row + 1):
+        section = ws.cell(row=row, column=1).value
+        metric_name = ws.cell(row=row, column=2).value
+
         if metric_name is None:
             continue
+
+        # Update current section if col 1 has a value
+        if section is not None:
+            section = str(section).strip()
+            if section:
+                current_section = section
+
         metric_name = str(metric_name).strip()
         if not metric_name:
             continue
 
+        # Build display name: section prefix only if meaningful
+        if current_section and current_section != metric_name:
+            full_name = f"{current_section} - {metric_name}"
+        else:
+            full_name = metric_name
+
         row_values = []
         for h in ordered:
-            val = ws.cell(row=row, column=header_to_col[h] + 2).value
+            col = header_to_excel_col.get(h)
+            if col is not None:
+                val = ws.cell(row=row, column=col).value
+            else:
+                val = None
             row_values.append(val)
-        metrics[metric_name] = row_values
+
+        metrics[full_name] = row_values
 
     wb.close()
     return ordered, metrics

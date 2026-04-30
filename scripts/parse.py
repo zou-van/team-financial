@@ -156,30 +156,25 @@ def parse_excel(filepath, mapping):
 
     # Read data rows (starting row 4, skip row 3 metadata)
     metrics = OrderedDict()
-    current_section = ""
+    seen_metrics = set()
 
     for row in range(4, ws.max_row + 1):
-        section = ws.cell(row=row, column=1).value
         metric_name = ws.cell(row=row, column=2).value
 
         if metric_name is None:
             continue
 
-        # Update current section if col 1 has a value
-        if section is not None:
-            section = str(section).strip()
-            if section:
-                current_section = section
-
         metric_name = str(metric_name).strip()
         if not metric_name:
             continue
 
-        # Build display name: section prefix only if meaningful
-        if current_section and current_section != metric_name:
-            full_name = f"{current_section} - {metric_name}"
-        else:
-            full_name = metric_name
+        # Use metric name directly; dedup if it collides
+        unique_name = metric_name
+        suffix = 2
+        while unique_name in seen_metrics:
+            unique_name = f"{metric_name}({suffix})"
+            suffix += 1
+        seen_metrics.add(unique_name)
 
         row_values = []
         for h in ordered:
@@ -190,7 +185,7 @@ def parse_excel(filepath, mapping):
                 val = None
             row_values.append(val)
 
-        metrics[full_name] = row_values
+        metrics[unique_name] = row_values
 
     wb.close()
     return ordered, metrics

@@ -70,4 +70,4 @@ excel/*.xlsx → scripts/parse.py → data/YYYY-MM.md + data/index.json
 - Target Excel sheet hardcoded as `差距分析(团队)`
 - Name dedup logic exists in TWO places (`parse.py` + `loadData.js`), must stay in sync
 - `assetsInclude: ['**/*.md']` in `vite.config.js` is required for .md imports
-- Only one month of data (2026-03) currently available — trend chart has limited utility
+- Two months of data (2026-02, 2026-03) available; trend chart works but limited to one month of delta

@@ -2,6 +2,12 @@
 
 Last updated: 2026-05-01
 
+## Deployment
+
+- **GitHub**: https://github.com/zou-van/team-financial
+- **Branch**: `main` (all features merged and pushed)
+- **Latest commit**: `ab5ddf0` Merge: trend chart redesign with curated metrics and dimension picker
+
 ## What's Built
 
 Team financial data dashboard — static SPA with Vite + React. Parses monthly Excel files into Markdown, bundles at build time via `import.meta.glob`.

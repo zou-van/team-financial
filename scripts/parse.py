@@ -226,6 +226,55 @@ def generate_index(months, metrics, mapping):
     }
 
 
+def match_trend_metric(whitelist_name, metric_keys):
+    """Match a trend_metrics entry against parsed metric names.
+
+    Exact match first; if none, prefix match (e.g. '累计现金流' matches
+    '累计现金流_2025.3.31').
+    Returns the matched metric key or None.
+    """
+    if whitelist_name in metric_keys:
+        return whitelist_name
+    for key in metric_keys:
+        if key.startswith(whitelist_name):
+            return key
+    return None
+
+
+def generate_trend(months_data, headers, mapping):
+    """Generate trend.json content.
+
+    months_data: dict of {month_key: {metric_name: [values]}}
+    headers: ordered list of team column names
+    mapping: the loaded team-mapping.yaml dict
+    """
+    trend_metrics = (mapping or {}).get("trend_metrics", [])
+    if not trend_metrics:
+        return None
+
+    metrics_out = {}
+    for whitelist_name in trend_metrics:
+        month_values = {}
+        for month_key, parsed_metrics in months_data.items():
+            matched = match_trend_metric(whitelist_name, parsed_metrics.keys())
+            if matched is None:
+                continue
+            values = parsed_metrics[matched]
+            team_data = {}
+            for i, h in enumerate(headers):
+                if i < len(values) and values[i] is not None:
+                    team_data[h] = values[i]
+            if team_data:
+                month_values[month_key] = team_data
+        if month_values:
+            metrics_out[whitelist_name] = month_values
+
+    return {
+        "metrics": metrics_out,
+        "teams": mapping or {},
+    }
+
+
 def main():
     DATA_DIR.mkdir(exist_ok=True)
     mapping = load_mapping()
@@ -244,6 +293,8 @@ def main():
 
     all_metrics = set()
     months_list = []
+    months_data = {}  # month_key -> {metric_name: [values]}
+    last_headers = None
 
     for fp in excel_files:
         try:
@@ -269,12 +320,24 @@ def main():
 
         months_list.append(month_key)
         all_metrics.update(metrics.keys())
+        months_data[month_key] = metrics
+        last_headers = headers
 
     index = generate_index(sorted(months_list), all_metrics, mapping)
     index_path = DATA_DIR / "index.json"
     with open(index_path, "w", encoding="utf-8") as f:
         json.dump(index, f, ensure_ascii=False, indent=2)
     print(f"Generated: {index_path}")
+
+    # Generate trend.json
+    trend = generate_trend(months_data, last_headers or [], mapping)
+    if trend is not None:
+        trend_path = DATA_DIR / "trend.json"
+        with open(trend_path, "w", encoding="utf-8") as f:
+            json.dump(trend, f, ensure_ascii=False, indent=2)
+        print(f"Generated: {trend_path} ({len(trend['metrics'])} metrics)")
+    else:
+        print("No trend_metrics configured, skipping trend.json")
 
 
 if __name__ == "__main__":

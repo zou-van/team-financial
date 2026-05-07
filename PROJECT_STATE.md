@@ -6,7 +6,8 @@ Last updated: 2026-05-01
 
 - **GitHub**: https://github.com/zou-van/team-financial
 - **Branch**: `main` (all features merged and pushed)
-- **Latest commit**: `ab5ddf0` Merge: trend chart redesign with curated metrics and dimension picker
+- **Latest commit**: `bf9d8bb` Merge: update PROJECT_STATE.md with deployment info
+- **Worktree**: removed — working in main project directory directly
 
 ## What's Built
 

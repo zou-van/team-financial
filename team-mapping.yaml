@@ -6,11 +6,26 @@ leaders:
   张浩:
     交易中台: [订单&选店, Promotion, 礼品卡, PMO, 菜单&凌霄]
   沈晓华:
-    营销中台: [Coupon, 多拉, 企微社群]
+    营销中台: [Coupon, 多拉, CRM Portal, 企微社群]
     大前端: [大前端-APP, 自动化营销]
     前端创新: [前端创新, 数据]
   赵华:
-    线上运营: [PMS&天气中台, 智能物流, 接单&运营, PH点餐, K点餐, 点餐平台, 智能商圈, Prime, 扁鹊&大禹&商城&预约]
+    线上运营: [PMS&天气中台, PH点餐, K点餐, 点餐平台, Prime, 扁鹊&大禹&商城&预约, 智能物流, 接单&运营, 智能商圈]
+
+virtual_aggregates:
+  - name: 孙伟（汇总）
+    sub_team: 营销中台
+    start_month: 2026-06
+    after: CRM Portal
+    members: [Coupon, 多拉, CRM Portal]
+  - name: 钱知麟（汇总）
+    sub_team: 线上运营
+    start_month: 2026-06
+    after: 扁鹊&大禹&商城&预约
+    members: [PMS&天气中台, PH点餐, K点餐, 点餐平台, Prime, 扁鹊&大禹&商城&预约]
+
+aggregate_column_names:
+  前端创新: 前端创新汇总
 
 trend_metrics:
   - 回款目标（实发奖金口径）

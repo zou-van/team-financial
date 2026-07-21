@@ -1,4 +1,11 @@
-/* Reset & base */
+:root {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  color: #171717;
+  background: #ffffff;
+  font-synthesis: none;
+}
+
 *,
 *::before,
 *::after {
@@ -8,342 +15,487 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-    "Microsoft YaHei", sans-serif;
-  color: #1a1a1a;
-  background: #f5f5f5;
-  line-height: 1.6;
+  min-width: 320px;
+  background: #ffffff;
+  color: #171717;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-/* App layout */
+button,
+select {
+  font: inherit;
+}
+
 .app {
-  max-width: 1400px;
+  width: min(100%, 1440px);
   margin: 0 auto;
-  padding: 24px;
+  padding: 48px 32px 64px;
 }
 
 .app-header {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 28px;
+}
+
+.app-eyebrow {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
 }
 
 .app-header h1 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1e3a5f;
+  color: #0a0a0a;
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+}
+
+.app-subtitle {
+  color: #737373;
+  font-size: 14px;
+}
+
+.app-toolbar,
+.app-main {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #ffffff;
 }
 
 .app-toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
-  padding: 16px 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  padding: 12px 16px;
 }
 
 .app-main {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  padding: 24px;
   min-height: 400px;
+  padding: 20px;
 }
 
-/* MonthSelector */
-.month-selector label {
-  font-size: 15px;
-  font-weight: 500;
+.month-selector label,
+.picker label,
+.picker-label {
+  color: #404040;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.month-selector select {
+.month-selector select,
+.picker select {
+  appearance: none;
   margin-left: 8px;
-  padding: 6px 12px;
-  border: 1px solid #d1d5db;
+  min-height: 34px;
+  padding: 6px 30px 6px 12px;
+  border: 1px solid #d4d4d4;
   border-radius: 6px;
-  font-size: 14px;
-  background: #fff;
-}
-
-/* ViewTabs */
-.view-tabs {
-  display: flex;
-  gap: 0;
-}
-
-.view-tabs .tab {
-  padding: 8px 20px;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  font-size: 14px;
+  color: #171717;
+  background: #ffffff
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23525252' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
   cursor: pointer;
-  transition: all 0.15s;
 }
 
-.view-tabs .tab:first-child {
-  border-radius: 6px 0 0 6px;
-}
-
-.view-tabs .tab:last-child {
-  border-radius: 0 6px 6px 0;
-}
-
-.view-tabs .tab.active {
-  background: #2563eb;
-  color: #fff;
+.month-selector select:focus,
+.picker select:focus {
+  outline: 2px solid #dbeafe;
+  outline-offset: 1px;
   border-color: #2563eb;
 }
 
-/* MonthlyTable */
-.monthly-table h2 {
-  font-size: 20px;
-  margin-bottom: 20px;
-  color: #1e3a5f;
-}
-
-.monthly-table .metric-label {
-  text-align: left;
-  font-weight: 600;
-  background: #f8fafc;
-  color: #374151;
-  white-space: nowrap;
-  position: sticky;
-  left: 28px;
-  z-index: 2;
-  padding: 8px 12px;
-}
-
-.monthly-table thead th.metric-header {
-  position: sticky;
-  left: 28px;
-  z-index: 3;
-  background: #f0f4ff;
-}
-
-.toggle-col {
-  width: 28px;
-  min-width: 28px;
-  max-width: 28px;
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: #f0f4ff;
-}
-
-.toggle-cell {
-  text-align: center;
-  padding: 2px 4px;
-  position: sticky;
-  left: 0;
-  z-index: 2;
-}
-
-.row-toggle {
-  display: inline-flex;
+.view-tabs {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: #fff;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  color: #6b7280;
-  padding: 0;
-}
-
-.row-toggle:hover {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fca5a5;
-}
-
-.metric-label.child {
-  padding-left: 20px;
-  font-weight: 400;
-  color: #6b7280;
-}
-
-.sub-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: #fff;
-  font-size: 13px;
-  line-height: 1;
-  cursor: pointer;
-  color: #6b7280;
-  margin-right: 6px;
-  padding: 0;
-  vertical-align: middle;
-}
-
-.sub-toggle:hover {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fca5a5;
-}
-
-.section-spacer td {
-  height: 12px;
-  padding: 0;
-  border: none;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
   background: #f5f5f5;
 }
 
-/* Metric picker */
-.metric-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 20px;
-}
-
-.metric-tag {
-  padding: 4px 12px;
-  border: 1px solid #d1d5db;
+.view-tabs .tab {
+  padding: 6px 14px;
+  border: 0;
   border-radius: 6px;
-  background: #fff;
+  color: #525252;
+  background: transparent;
   font-size: 13px;
-  color: #374151;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
-.metric-tag:hover {
-  border-color: #2563eb;
-  color: #2563eb;
+.view-tabs .tab:hover {
+  color: #171717;
 }
 
-.metric-tag.selected {
-  background: #2563eb;
-  color: #fff;
-  border-color: #2563eb;
+.view-tabs .tab.active {
+  color: #ffffff;
+  background: #171717;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.monthly-table h2 {
+  color: #171717;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.unit-label {
+  flex: none;
+  padding: 4px 10px;
+  border: 1px solid #e5e5e5;
+  border-radius: 9999px;
+  color: #525252;
+  background: #fafafa;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .table-wrapper {
-  overflow-x: auto;
+  position: relative;
+  overflow: auto;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  isolation: isolate;
 }
 
 .monthly-table table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #262626;
   font-size: 12px;
   white-space: nowrap;
 }
 
 .monthly-table th,
 .monthly-table td {
-  border: 1px solid #e5e7eb;
-  padding: 8px 16px;
-  text-align: center;
+  min-width: 88px;
+  padding: 8px 10px;
+  border: 0;
+  border-right: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
+  text-align: right;
 }
 
 .monthly-table thead th {
-  background: #f0f4ff;
+  color: #404040;
+  background: #f5f5f5;
+  font-size: 11px;
   font-weight: 600;
-  color: #1e3a5f;
+  text-align: center;
+}
+
+.monthly-table thead tr:first-child th {
+  color: #171717;
+  background: #fafafa;
+}
+
+.monthly-table tr > *:last-child {
+  border-right: 0;
+}
+
+.monthly-table tbody tr:last-child > * {
+  border-bottom: 0;
 }
 
 .monthly-table tbody td {
-  background: #fff;
+  background: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.monthly-table .mom-cell {
+  position: relative;
+}
+
+.mom-value {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-decoration: underline dotted;
+  text-decoration-color: #a3a3a3;
+  text-underline-offset: 3px;
+}
+
+.mom-value:hover,
+.mom-value:focus-visible {
+  color: #2563eb;
+  outline: none;
+  text-decoration-color: currentColor;
+  text-underline-offset: 3px;
+}
+
+.mom-popover {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 5px);
+  right: 6px;
+  min-width: max-content;
+  padding: 5px 8px;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  color: #262626;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.monthly-table .metric-label {
+  position: sticky;
+  left: 28px;
+  z-index: 5;
+  width: 204px;
+  min-width: 204px;
+  max-width: 204px;
+  color: #262626;
+  background: #ffffff;
+  background-clip: padding-box;
+  box-shadow: 1px 0 0 #d4d4d4;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.monthly-table thead th.metric-header {
+  position: sticky;
+  left: 28px;
+  z-index: 8;
+  width: 204px;
+  min-width: 204px;
+  max-width: 204px;
+  background: #f5f5f5;
+  box-shadow: 1px 0 0 #d4d4d4;
+}
+
+.monthly-table .toggle-col {
+  position: sticky;
+  left: 0;
+  z-index: 9;
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  background: #f5f5f5;
+}
+
+.monthly-table .toggle-cell {
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  width: 28px;
+  min-width: 28px;
+  padding: 0 !important;
+  background: #ffffff;
+  background-clip: padding-box;
+  box-shadow: 1px 0 0 #d4d4d4;
+  text-align: center !important;
+}
+
+.metric-label.child {
+  padding-left: 32px;
+  color: #737373;
+  font-weight: 400;
+}
+
+.row-toggle,
+.sub-toggle,
+.leader-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  color: #525252;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.row-toggle {
+  width: 18px;
+  height: 18px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.sub-toggle {
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  font-size: 12px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.leader-toggle {
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  font-size: 12px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.row-toggle:hover,
+.sub-toggle:hover,
+.leader-toggle:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .monthly-table tbody td.aggregate {
+  color: #171717;
+  background: #f5f5f5;
   font-weight: 700;
-  color: #111827;
-  background: #f0f4ff;
 }
 
 .monthly-table tbody td.negative {
   color: #dc2626;
 }
 
-.monthly-table tbody tr:hover td {
-  background: #f9fafb;
+.monthly-table tbody tr:hover td,
+.monthly-table tbody tr:hover .metric-label,
+.monthly-table tbody tr:hover .toggle-cell {
+  background: #fafafa;
 }
 
 .monthly-table tbody tr:hover td.aggregate {
-  background: #e0e7ff;
+  background: #f1f5f9;
 }
 
-/* TrendChart */
+.section-spacer td {
+  height: 8px;
+  padding: 0;
+  border: 0;
+  background: #f5f5f5;
+}
+
+.monthly-table .collapsed-leader-placeholder,
+.monthly-table .collapsed-leader-cell {
+  width: 52px;
+  min-width: 52px;
+  max-width: 52px;
+}
+
+.collapsed-leader-cell {
+  background: #fafafa !important;
+}
+
 .trend-chart .chart-controls {
   display: flex;
-  gap: 24px;
-  margin-bottom: 24px;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
+  gap: 12px 24px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .picker {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.picker label {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.picker select {
-  margin-left: 8px;
-  padding: 6px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  background: #fff;
+  gap: 4px;
 }
 
 .team-picker {
   flex-wrap: wrap;
 }
 
-.picker-label {
-  font-size: 14px;
-  font-weight: 500;
-}
-
 .team-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 12px;
   align-items: center;
+  gap: 4px 12px;
 }
 
-.group-label {
+.group-label,
+.team-checkbox {
+  color: #737373;
   font-size: 12px;
-  color: #6b7280;
-  margin-right: 4px;
 }
 
 .team-checkbox {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .team-checkbox input[type="checkbox"] {
+  accent-color: #2563eb;
   cursor: pointer;
 }
 
-/* Empty state */
 .empty-state {
+  padding: 72px 20px;
+  color: #737373;
+  font-size: 14px;
   text-align: center;
-  color: #9ca3af;
-  padding: 60px 20px;
-  font-size: 15px;
+}
+
+@media (max-width: 720px) {
+  .app {
+    padding: 28px 16px 40px;
+  }
+
+  .app-toolbar,
+  .app-main {
+    padding: 14px;
+  }
+
+  .app-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .monthly-table .metric-label {
+    width: 168px;
+    min-width: 168px;
+    max-width: 168px;
+  }
+
+  .monthly-table thead th.metric-header {
+    width: 168px;
+    min-width: 168px;
+    max-width: 168px;
+  }
+
+  .monthly-table th,
+  .monthly-table td {
+    min-width: 80px;
+    padding: 8px 10px;
+  }
 }

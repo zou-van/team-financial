@@ -12,9 +12,9 @@ excel/*.xlsx  →  scripts/parse.py  →  data/*.md  →  Vite + React 前端
             team-mapping.yaml        data/index.json
 ```
 
-1. 财务提供 Excel → 放入 `excel/` 目录，按 `YYYY-MM.xlsx` 命名
-2. 手动维护 `team-mapping.yaml`，描述团队层级关系（一次性）
-3. 运行 `python scripts/parse.py` → 扫描 Excel，生成 `data/YYYY-MM.md` 和 `data/index.json`
+1. 财务提供 Excel → 放入 `excel/` 目录，文件名须包含末尾的 `YYYYMM`
+2. 手动维护 `team-mapping.yaml`，描述团队层级、展示顺序和需要从指定月份生效的计算汇总列
+3. 运行 `python scripts/parse.py` → 扫描 Excel，生成 `data/YYYY-MM.md`、`data/index.json` 和 `data/trend.json`
 4. 重新放入某月 Excel 后重新运行脚本，覆盖更新对应的 Markdown
 5. Vite + React 前端读 Markdown 和 index.json，渲染页面
 
@@ -39,7 +39,9 @@ excel/*.xlsx  →  scripts/parse.py  →  data/*.md  →  Vite + React 前端
 - 目标 Sheet：**「差距分析(团队)」**
 - 列：每个小团队一列 + 子团队汇总列 + 大团队汇总列
 - 行：各项财务指标（回款目标、现金支出等）
-- 第一行为列标题（团队名），第一列为行标题（指标名）
+- 第 2 行（第 3 列起）为团队列标题
+- 第 3 行是元数据，解析时跳过
+- 第 4 行起为指标数据：第 1 列为分类（忽略），第 2 列为指标名
 
 ## team-mapping.yaml
 
@@ -57,8 +59,10 @@ leaders:
 ```
 
 - 用户手动维护，组织架构变动时更新
-- 脚本用此文件验证 Excel 列名完整性，不匹配时报错
+- 脚本用此文件提示 Excel 列名不匹配；不阻断其他可解析数据
 - 前端用此文件实现按 Leader 分组展示
+- `virtual_aggregates` 可定义从某个月开始生效的展示汇总列；其数值由所列成员的同一指标相加生成
+- `aggregate_column_names` 可为 Excel 中重复的汇总列指定显示名
 
 ## scripts/parse.py
 
@@ -69,6 +73,7 @@ leaders:
 ### 输出
 - `data/YYYY-MM.md` — 每月一份，每个指标一个表格
 - `data/index.json` — 列出所有可用月份、指标名、团队结构
+- `data/trend.json` — 仅包含趋势白名单指标的月度团队值
 
 ### Markdown 格式
 
@@ -87,8 +92,8 @@ leaders:
 ```
 
 ### 错误处理
-- Excel 列名与 mapping 不匹配 → 报错并列出不匹配的列名
-- 数值单元格非数字 → 跳过并输出警告
+- Excel 列名与 mapping 不匹配 → 输出警告并列出不匹配的列名
+- 数值单元格非数字 → 保留原始显示值；计算汇总列仅在所有成员均为数字时生成数值
 - mapping 文件缺失 → 按 Excel 原始列顺序生成，不加分组
 - 缺少某月 Excel → 不影响其他月份，前端展示时跳过
 
@@ -101,7 +106,7 @@ python scripts/parse.py
 
 ### 技术栈
 - Vite + React + Recharts
-- `import.meta.glob` 导入 `data/*.md` 和 `team-mapping.yaml`
+- `import.meta.glob` 导入 `data/*.md`，JSON 通过 Vite 静态导入
 - 纯静态构建，无需服务端
 
 ### 组件树
@@ -125,12 +130,15 @@ App
 - Leader 行 → 子团队行 → 小团队行（三级表头）
 - 大团队列独立显示在最后
 - 上方月份选择器切换月份
+- 指标列与展开按钮列固定，横向滚动时保持可见
+- 数值以千元展示，使用千分位并最多保留两位小数
+- 子团队和 Leader 均支持 `−` / `+` 收起、展开；Leader 收起时仅保留一个占位列
 
 ### 视图二：趋势图
 
 - X 轴 = 月份，Y 轴 = 数值
-- 选择器：指标、团队层级（大团队/Leader/子团队/小团队）
-- 支持多选团队对比
+- 选择器：指标、团队层级（大团队/子团队/小团队）
+- 子团队视图展示所属小团队和该子团队汇总；汇总线用虚线区分
 - Recharts 折线图 + 数据点标记
 
 ### 数据加载
@@ -150,4 +158,4 @@ App
 - 用户登录 / 权限控制
 - Excel 上传功能（手动放入目录）
 - 数据编辑功能
-- 移动端适配
+- 响应式布局与窄屏下的横向表格滚动

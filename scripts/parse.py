@@ -54,7 +54,18 @@ def collect_team_names(mapping):
     return names
 
 
-def build_column_order(mapping):
+def active_virtual_aggregates(mapping, month_key):
+    """Return configured calculated columns active for the given month."""
+    if not mapping:
+        return []
+    return [
+        aggregate
+        for aggregate in mapping.get("virtual_aggregates", [])
+        if month_key >= aggregate["start_month"]
+    ]
+
+
+def build_column_order(mapping, month_key):
     """Return ordered column names following mapping hierarchy.
 
     Uses unique names when a subteam shares a name with a small team,
@@ -64,14 +75,23 @@ def build_column_order(mapping):
         return None
     order = []
     seen = set()
+    virtual_aggregates = active_virtual_aggregates(mapping, month_key)
+    aggregate_names = mapping.get("aggregate_column_names", {})
     for sub_teams in mapping.get("leaders", {}).values():
         for sub_team, small_teams in sub_teams.items():
             for st in small_teams:
                 if st not in seen:
                     seen.add(st)
                 order.append(st)
+                for aggregate in virtual_aggregates:
+                    if aggregate["sub_team"] == sub_team and aggregate["after"] == st:
+                        order.append(aggregate["name"])
             # Dedup subteam name if it collides
-            unique_sub = sub_team
+            unique_sub = (
+                aggregate_names.get(sub_team, sub_team)
+                if sub_team in seen
+                else sub_team
+            )
             suffix = 2
             while unique_sub in seen:
                 unique_sub = f"{sub_team}({suffix})"
@@ -86,7 +106,7 @@ def build_column_order(mapping):
     return order
 
 
-def parse_excel(filepath, mapping):
+def parse_excel(filepath, mapping, month_key):
     """Parse a single Excel file.
 
     Excel layout (Sheet '差距分析(团队)'):
@@ -96,7 +116,9 @@ def parse_excel(filepath, mapping):
 
     Returns (ordered_headers: list[str], metrics: OrderedDict).
     """
-    wb = load_workbook(filepath, data_only=True)
+    # Read-only mode avoids loading pivot-cache records, which are not used by
+    # this parser and make recent source workbooks disproportionately slow.
+    wb = load_workbook(filepath, data_only=True, read_only=True)
     if SHEET_NAME not in wb.sheetnames:
         raise ValueError(
             f"Sheet '{SHEET_NAME}' not found. Available: {wb.sheetnames}"
@@ -118,7 +140,10 @@ def parse_excel(filepath, mapping):
             continue
 
         # Deduplicate: Excel may have same name for small team and its aggregate
-        unique_name = name
+        aggregate_name = (mapping or {}).get("aggregate_column_names", {}).get(
+            name
+        )
+        unique_name = aggregate_name if name in seen and aggregate_name else name
         suffix = 2
         while unique_name in seen:
             unique_name = f"{name}({suffix})"
@@ -146,10 +171,16 @@ def parse_excel(filepath, mapping):
             print(f"  Warning: in Excel but not in mapping: {extra}")
 
     # Reorder headers by mapping (extra columns appended at end)
-    col_order = build_column_order(mapping)
+    virtual_aggregates = {
+        aggregate["name"]: aggregate
+        for aggregate in active_virtual_aggregates(mapping, month_key)
+    }
+    col_order = build_column_order(mapping, month_key)
     if col_order:
         header_set = set(headers)
-        ordered = [h for h in col_order if h in header_set]
+        ordered = [
+            h for h in col_order if h in header_set or h in virtual_aggregates
+        ]
         ordered += [h for h in headers if h not in col_order]
     else:
         ordered = list(headers)
@@ -178,11 +209,20 @@ def parse_excel(filepath, mapping):
 
         row_values = []
         for h in ordered:
-            col = header_to_excel_col.get(h)
-            if col is not None:
-                val = ws.cell(row=row, column=col).value
+            aggregate = virtual_aggregates.get(h)
+            if aggregate:
+                member_values = [
+                    ws.cell(row=row, column=header_to_excel_col[member]).value
+                    for member in aggregate["members"]
+                ]
+                val = (
+                    sum(member_values)
+                    if all(isinstance(value, (int, float)) for value in member_values)
+                    else None
+                )
             else:
-                val = None
+                col = header_to_excel_col.get(h)
+                val = ws.cell(row=row, column=col).value if col is not None else None
             row_values.append(val)
 
         metrics[unique_name] = row_values
@@ -241,11 +281,11 @@ def match_trend_metric(whitelist_name, metric_keys):
     return None
 
 
-def generate_trend(months_data, headers, mapping):
+def generate_trend(months_data, headers_by_month, mapping):
     """Generate trend.json content.
 
     months_data: dict of {month_key: {metric_name: [values]}}
-    headers: ordered list of team column names
+    headers_by_month: dict of {month_key: ordered team column names}
     mapping: the loaded team-mapping.yaml dict
     """
     trend_metrics = (mapping or {}).get("trend_metrics", [])
@@ -261,6 +301,7 @@ def generate_trend(months_data, headers, mapping):
                 continue
             values = parsed_metrics[matched]
             team_data = {}
+            headers = headers_by_month[month_key]
             for i, h in enumerate(headers):
                 if i < len(values) and values[i] is not None:
                     team_data[h] = values[i]
@@ -294,7 +335,7 @@ def main():
     all_metrics = set()
     months_list = []
     months_data = {}  # month_key -> {metric_name: [values]}
-    last_headers = None
+    headers_by_month = {}  # month_key -> ordered team column names
 
     for fp in excel_files:
         try:
@@ -305,7 +346,7 @@ def main():
 
         print(f"Processing: {fp.name} -> {month_key}")
         try:
-            headers, metrics = parse_excel(fp, mapping)
+            headers, metrics = parse_excel(fp, mapping, month_key)
         except Exception as e:
             print(f"  ERROR: {e}")
             continue
@@ -321,7 +362,7 @@ def main():
         months_list.append(month_key)
         all_metrics.update(metrics.keys())
         months_data[month_key] = metrics
-        last_headers = headers
+        headers_by_month[month_key] = headers
 
     index = generate_index(sorted(months_list), all_metrics, mapping)
     index_path = DATA_DIR / "index.json"
@@ -330,7 +371,7 @@ def main():
     print(f"Generated: {index_path}")
 
     # Generate trend.json
-    trend = generate_trend(months_data, last_headers or [], mapping)
+    trend = generate_trend(months_data, headers_by_month, mapping)
     if trend is not None:
         trend_path = DATA_DIR / "trend.json"
         with open(trend_path, "w", encoding="utf-8") as f:

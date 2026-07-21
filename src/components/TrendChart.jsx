@@ -68,16 +68,16 @@ export default function TrendChart({ trendData }) {
       const sub = subTeams.find((s) => s.name === selectedSubTeam);
       if (!sub) return { lines: [], isSubTeam: false };
       const hasCollision = sub.members.includes(sub.name);
+      const aggregateName = teams.aggregate_column_names?.[sub.name]
+        || `${sub.name}(2)`;
       // Small teams as solid lines
       const lines = sub.members.map((m) => ({ key: m, displayName: m }));
       if (hasCollision) {
-        // Sub-team aggregate stored under deduped name e.g. "前端创新(2)"
-        const dedupedName = `${sub.name}(2)`;
-        lines.push({ key: dedupedName, displayName: `${sub.name}(子团队)` });
+        lines.push({ key: aggregateName, displayName: aggregateName });
       } else {
         lines.push({ key: sub.name, displayName: sub.name });
       }
-      return { lines, isSubTeam: true, aggregateKey: hasCollision ? `${sub.name}(2)` : sub.name };
+      return { lines, isSubTeam: true, aggregateKey: hasCollision ? aggregateName : sub.name };
     }
 
     // dimension === "small"

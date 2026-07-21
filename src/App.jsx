@@ -23,7 +23,9 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>团队财务数据</h1>
+        <p className="app-eyebrow">TEAM FINANCE</p>
+        <h1>团队财务看板</h1>
+        <p className="app-subtitle">按月查看团队经营指标与趋势</p>
       </header>
 
       <div className="app-toolbar">
@@ -37,7 +39,13 @@ export default function App() {
 
       <main className="app-main">
         {view === "monthly" ? (
-          <MonthlyTable key={selectedMonth} data={currentMonthData} mapping={index} />
+          <MonthlyTable
+            key={selectedMonth}
+            data={currentMonthData}
+            mapping={index}
+            months={months}
+            selectedMonth={selectedMonth}
+          />
         ) : (
           <TrendChart trendData={DATA.trendData} />
         )}

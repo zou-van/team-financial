@@ -56,6 +56,15 @@ const GROUPS = [
 ];
 
 const GROUP_COLORS = ["#f0fdf4", "#eff6ff", "#fefce8", "#fef2f2"];
+const CUMULATIVE_CASH_FLOW_PREFIX = "累计现金流_";
+const PMS_FORECAST_NAME = "PMS预计回款（在途）";
+
+function formatValue(value) {
+  if (typeof value !== "number") return value ?? "-";
+  return new Intl.NumberFormat("zh-CN", {
+    maximumFractionDigits: 2,
+  }).format(value);
+}
 
 /* ------------------------------------------------------------------ */
 /*  helpers                                                            */
@@ -79,7 +88,48 @@ function resolveGroups(metrics) {
   );
 }
 
-/** Build lookup: column name → { subTeam, isAggregate } */
+function isMonthOverMonthMetric(name) {
+  return name.startsWith(CUMULATIVE_CASH_FLOW_PREFIX) || name === PMS_FORECAST_NAME;
+}
+
+function getPreviousMetric(metrics, metricName) {
+  if (!metrics) return null;
+  if (metricName.startsWith(CUMULATIVE_CASH_FLOW_PREFIX)) {
+    return Object.entries(metrics).find(([name]) =>
+      name.startsWith(CUMULATIVE_CASH_FLOW_PREFIX),
+    )?.[1];
+  }
+  return metrics[metricName] || null;
+}
+
+function getMonthOverMonth(item, header, months, selectedMonth) {
+  const previousMonth = Object.keys(months)
+    .filter((month) => month < selectedMonth)
+    .sort()
+    .at(-1);
+  const previousMetric = getPreviousMetric(
+    previousMonth ? months[previousMonth]?.metrics : null,
+    item.name,
+  );
+  const previousIndex = previousMetric?.headers.indexOf(header);
+  const previousValue = previousIndex >= 0
+    ? previousMetric.values[previousIndex]
+    : null;
+
+  if (typeof previousValue !== "number") return "暂无上月可比数据";
+  if (previousValue === 0) return "上月为 0，无法计算环比";
+
+  const currentIndex = item.data.headers.indexOf(header);
+  const currentValue = item.data.values[currentIndex];
+  const difference = currentValue - previousValue;
+  const percentage = Math.abs(difference / Math.abs(previousValue) * 100).toFixed(2);
+
+  if (difference > 0) return `上升 ${percentage}%`;
+  if (difference < 0) return `下降 ${percentage}%`;
+  return "持平 0.00%";
+}
+
+/** Build lookup: column name → { leader, subTeam, isAggregate } */
 function buildColumnInfo(colGroups) {
   if (!colGroups) return {};
   const info = {};
@@ -87,11 +137,67 @@ function buildColumnInfo(colGroups) {
     for (const sg of g.subGroups) {
       const cols = sg.columns;
       for (let i = 0; i < cols.length; i++) {
-        info[cols[i]] = { subTeam: sg.subTeam, isAggregate: i === cols.length - 1 };
+        info[cols[i]] = {
+          leader: g.leader,
+          subTeam: sg.subTeam,
+          isAggregate: i === cols.length - 1,
+        };
       }
     }
   }
   return info;
+}
+
+function renderValueCells(
+  item,
+  orderedHeaders,
+  aggregateCols,
+  hiddenCols,
+  columnInfo,
+  collapsedLeaders,
+  months,
+  selectedMonth,
+  activeMomCell,
+  toggleMomCell,
+) {
+  const renderedCollapsedLeaders = new Set();
+
+  return orderedHeaders.map((h) => {
+    const leader = columnInfo[h]?.leader;
+    if (leader && collapsedLeaders.has(leader)) {
+      if (renderedCollapsedLeaders.has(leader)) return null;
+      renderedCollapsedLeaders.add(leader);
+      return <td key={`collapsed-${leader}`} className="collapsed-leader-cell" />;
+    }
+
+    if (hiddenCols.has(h)) return null;
+    const idx = item.data.headers.indexOf(h);
+    const value = idx >= 0 ? item.data.values[idx] : null;
+    const cls = cellClass(h, value, aggregateCols);
+    const isComparable = isMonthOverMonthMetric(item.name) && typeof value === "number";
+    const cellKey = `${item.name}:${h}`;
+    return (
+      <td key={h} className={`${cls} ${isComparable ? "mom-cell" : ""}`.trim() || undefined}>
+        {isComparable ? (
+          <>
+            <button
+              className="mom-value"
+              onClick={() => toggleMomCell(cellKey)}
+              title="点击查看环比"
+              aria-expanded={activeMomCell === cellKey}
+            >
+              {formatValue(value)}
+            </button>
+            {activeMomCell === cellKey && (
+              <span className="mom-popover" role="status">
+                环比：{getMonthOverMonth(item, h, months, selectedMonth)}
+              </span>
+            )}
+          </>
+        ) : formatValue(value)}
+      </td>
+    );
+  });
 }
 
 function renderRows(
@@ -102,6 +208,12 @@ function renderRows(
   ytdExpanded,
   toggleYtd,
   hiddenCols,
+  columnInfo,
+  collapsedLeaders,
+  months,
+  selectedMonth,
+  activeMomCell,
+  toggleMomCell,
 ) {
   const rows = [];
 
@@ -130,18 +242,8 @@ function renderRows(
                 {ytdExpanded ? "−" : "+"}
               </button>
             </td>
-            <th className="metric-label">{item.name}</th>
-            {orderedHeaders.map((h) => {
-              if (hiddenCols.has(h)) return null;
-              const idx = item.data.headers.indexOf(h);
-              const v = idx >= 0 ? item.data.values[idx] : null;
-              const cls = cellClass(h, v, aggregateCols);
-              return (
-                <td key={h} className={cls || undefined}>
-                  {v === null || v === undefined ? "-" : v}
-                </td>
-              );
-            })}
+            <th className="metric-label" title={item.name}>{item.name}</th>
+            {renderValueCells(item, orderedHeaders, aggregateCols, hiddenCols, columnInfo, collapsedLeaders, months, selectedMonth, activeMomCell, toggleMomCell)}
           </tr>,
         );
 
@@ -153,19 +255,8 @@ function renderRows(
                 style={{ backgroundColor: GROUP_COLORS[gi] }}
               >
                 <td className="toggle-cell" />
-                <th className="metric-label child">{child.name}</th>
-                {orderedHeaders.map((h) => {
-                  if (hiddenCols.has(h)) return null;
-                  const idx = child.data.headers.indexOf(h);
-                  const v =
-                    idx >= 0 ? child.data.values[idx] : null;
-                  const cls = cellClass(h, v, aggregateCols);
-                  return (
-                    <td key={h} className={cls || undefined}>
-                      {v === null || v === undefined ? "-" : v}
-                    </td>
-                  );
-                })}
+                <th className="metric-label child" title={child.name}>{child.name}</th>
+                {renderValueCells(child, orderedHeaders, aggregateCols, hiddenCols, columnInfo, collapsedLeaders, months, selectedMonth, activeMomCell, toggleMomCell)}
               </tr>,
             );
           });
@@ -177,18 +268,8 @@ function renderRows(
             style={{ backgroundColor: GROUP_COLORS[gi] }}
           >
             <td className="toggle-cell" />
-            <th className="metric-label">{item.name}</th>
-            {orderedHeaders.map((h) => {
-              if (hiddenCols.has(h)) return null;
-              const idx = item.data.headers.indexOf(h);
-              const v = idx >= 0 ? item.data.values[idx] : null;
-              const cls = cellClass(h, v, aggregateCols);
-              return (
-                <td key={h} className={cls || undefined}>
-                  {v === null || v === undefined ? "-" : v}
-                </td>
-              );
-            })}
+            <th className="metric-label" title={item.name}>{item.name}</th>
+            {renderValueCells(item, orderedHeaders, aggregateCols, hiddenCols, columnInfo, collapsedLeaders, months, selectedMonth, activeMomCell, toggleMomCell)}
           </tr>,
         );
       }
@@ -202,22 +283,23 @@ function renderRows(
 /*  component                                                          */
 /* ------------------------------------------------------------------ */
 
-export default function MonthlyTable({ data, mapping }) {
+export default function MonthlyTable({ data, mapping, months, selectedMonth }) {
   if (!data) {
     return <div className="empty-state">请选择月份查看数据</div>;
   }
 
   const { title, metrics } = data;
-  const colGroups = buildColumnGroups(mapping);
-  const aggregateCols = new Set(colGroups?.aggregateColumns || []);
-
   const metricEntries = Object.entries(metrics);
   const firstEntry = metricEntries[0];
   const orderedHeaders = firstEntry ? firstEntry[1].headers : [];
+  const colGroups = buildColumnGroups(mapping, orderedHeaders);
+  const aggregateCols = new Set(colGroups?.aggregateColumns || []);
 
   const resolvedGroups = resolveGroups(metrics);
   const [ytdExpanded, setYtdExpanded] = useState(false);
   const [collapsedSubTeams, setCollapsedSubTeams] = useState(new Set());
+  const [collapsedLeaders, setCollapsedLeaders] = useState(new Set());
+  const [activeMomCell, setActiveMomCell] = useState(null);
 
   const toggleYtd = () => setYtdExpanded((prev) => !prev);
 
@@ -230,6 +312,19 @@ export default function MonthlyTable({ data, mapping }) {
     });
   };
 
+  const toggleLeader = (name) => {
+    setCollapsedLeaders((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
+  const toggleMomCell = (cellKey) => {
+    setActiveMomCell((current) => current === cellKey ? null : cellKey);
+  };
+
   const columnInfo = buildColumnInfo(colGroups);
 
   // Build set of hidden columns (small team columns of collapsed sub-teams)
@@ -237,6 +332,10 @@ export default function MonthlyTable({ data, mapping }) {
   if (colGroups) {
     for (const g of colGroups.groups) {
       for (const sg of g.subGroups) {
+        if (collapsedLeaders.has(g.leader)) {
+          sg.columns.forEach((column) => hiddenCols.add(column));
+          continue;
+        }
         if (collapsedSubTeams.has(sg.subTeam)) {
           const cols = sg.columns;
           // All columns except the last (aggregate) are hidden
@@ -248,11 +347,14 @@ export default function MonthlyTable({ data, mapping }) {
     }
   }
 
-  const visibleColCount = 2 + orderedHeaders.length - hiddenCols.size;
+  const visibleColCount = 2 + orderedHeaders.length - hiddenCols.size + collapsedLeaders.size;
 
   return (
     <div className="monthly-table">
-      <h2>{title}</h2>
+      <div className="section-heading">
+        <h2>{title}</h2>
+        <span className="unit-label">单位：千元</span>
+      </div>
 
       <div className="table-wrapper">
         <table>
@@ -260,6 +362,8 @@ export default function MonthlyTable({ data, mapping }) {
             <GroupedHeader
               colGroups={colGroups}
               columnInfo={columnInfo}
+              collapsedLeaders={collapsedLeaders}
+              toggleLeader={toggleLeader}
               collapsedSubTeams={collapsedSubTeams}
               toggleSubTeam={toggleSubTeam}
               hiddenCols={hiddenCols}
@@ -276,6 +380,12 @@ export default function MonthlyTable({ data, mapping }) {
               ytdExpanded,
               toggleYtd,
               hiddenCols,
+              columnInfo,
+              collapsedLeaders,
+              months,
+              selectedMonth,
+              activeMomCell,
+              toggleMomCell,
             )}
           </tbody>
         </table>
@@ -302,6 +412,8 @@ function cellClass(header, value, aggregateCols) {
 function GroupedHeader({
   colGroups,
   columnInfo,
+  collapsedLeaders,
+  toggleLeader,
   collapsedSubTeams,
   toggleSubTeam,
   hiddenCols,
@@ -315,12 +427,22 @@ function GroupedHeader({
         <th rowSpan={3} className="toggle-col"></th>
         <th rowSpan={3} className="metric-header">指标</th>
         {groups.map((g) => {
-          const visibleCount = g.subGroups.reduce((sum, sg) => {
-            if (collapsedSubTeams.has(sg.subTeam)) return sum + 1;
-            return sum + sg.columns.length;
-          }, 0);
+          const collapsed = collapsedLeaders.has(g.leader);
+          const visibleCount = collapsed
+            ? 1
+            : g.subGroups.reduce((sum, sg) => {
+                if (collapsedSubTeams.has(sg.subTeam)) return sum + 1;
+                return sum + sg.columns.length;
+              }, 0);
           return (
             <th key={g.leader} colSpan={visibleCount}>
+              <button
+                className="leader-toggle"
+                onClick={() => toggleLeader(g.leader)}
+                title={collapsed ? "展开" : "收起"}
+              >
+                {collapsed ? "+" : "−"}
+              </button>
               {g.leader}
             </th>
           );
@@ -330,8 +452,11 @@ function GroupedHeader({
 
       {/* Row 2: Sub team names + toggle */}
       <tr>
-        {groups.map((g) =>
-          g.subGroups.map((sg) => {
+        {groups.map((g) => {
+          if (collapsedLeaders.has(g.leader)) {
+            return <th key={g.leader} rowSpan={2} className="collapsed-leader-placeholder" />;
+          }
+          return g.subGroups.map((sg) => {
             const collapsed = collapsedSubTeams.has(sg.subTeam);
             const visibleCount = collapsed ? 1 : sg.columns.length;
             return (
@@ -346,14 +471,15 @@ function GroupedHeader({
                 {sg.subTeam}
               </th>
             );
-          }),
-        )}
+          });
+        })}
       </tr>
 
       {/* Row 3: Individual column names */}
       <tr>
-        {groups.map((g) =>
-          g.subGroups.map((sg) =>
+        {groups.map((g) => {
+          if (collapsedLeaders.has(g.leader)) return null;
+          return g.subGroups.map((sg) =>
             sg.columns.map((col) => {
               if (hiddenCols.has(col)) return null;
               return (
@@ -362,8 +488,8 @@ function GroupedHeader({
                 </th>
               );
             }),
-          ),
-        )}
+          );
+        })}
       </tr>
     </thead>
   );

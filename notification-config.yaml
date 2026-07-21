@@ -1,0 +1,23 @@
+# 飞书通知范围。发送通道为 lark-cli；此文件不参与数据解析，也不存储飞书身份或密钥。
+# sub_team 范围包含该子团队的全部小团队和汇总列；teams 只包含指定小团队。
+recipients:
+  - name: 朱孝峰
+    open_id: ou_19e5b6b7213dbbcc1099b98ae2ef2777
+    scopes:
+      - leader: 赵华
+  - name: 彭明阳
+    open_id: ou_3214a0d8079b02d0839fa0c33db787fb
+    scopes:
+      - leader: 沈晓华
+        sub_team: 营销中台
+      - leader: 沈晓华
+        sub_team: 大前端
+        teams: [自动化营销]
+  - name: 郭一鸣
+    open_id: ou_44dbefd9a2db3efaf23ea0f26df7d5bf
+    scopes:
+      - leader: 沈晓华
+        sub_team: 大前端
+        teams: [大前端-APP]
+      - leader: 沈晓华
+        sub_team: 前端创新

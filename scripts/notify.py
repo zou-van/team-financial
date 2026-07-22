@@ -35,6 +35,13 @@ METRIC_JULY_CF_EST = "7月现金流预估"
 # Dashboard link template (update when deployed)
 DASHBOARD_URL = "https://your-dashboard.example.com"
 
+# Leader → aggregate column mapping for overall card (matching Excel columns)
+LEADER_COLUMN_MAP = {
+    "张浩": "交易中台",
+    "沈晓华": "沈晓华合计",
+    "赵华": "线上运营",
+}
+
 
 # ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -283,12 +290,6 @@ def get_scope_breakdown(scope, mapping):
             sub_breakdowns.append((va["name"], va_members))
             covered.update(va_members)
 
-    # Only show sub-breakdowns when there is at least one virtual
-    # aggregate.  Without one, the scope itself is the right level of
-    # detail (e.g. 前端创新 with [前端创新, 数据]).
-    if not sub_breakdowns:
-        return teams, []
-
     # Remaining teams not covered by any virtual aggregate
     remaining = [t for t in teams if t not in covered]
     for t in remaining:
@@ -324,19 +325,21 @@ def _header(month_label_str, subtitle):
     }
 
 
-def _kpi_card(label, value, sub_text=None, value_color="blue", sub_color="grey"):
+def _kpi_card(label, value, sub_text=None, value_color="blue", sub_color="grey",
+              value_prefix="## "):
     """Build a single KPI card column.
 
-    label:      metric name shown in grey notation above the value
-    value:      big number (already formatted by format_amount)
-    sub_text:   optional footnote (MoM, status, etc.), grey notation
-    value_color: colour for the big number (blue / red / green)
-    sub_color:   colour for sub_text (grey / red / green)
+    label:        metric name shown in grey notation above the value
+    value:        big number (already formatted by format_amount)
+    sub_text:     optional footnote (MoM, status, etc.), grey notation
+    value_color:  colour for the big number (blue / red / green)
+    sub_color:    colour for sub_text (grey / red / green)
+    value_prefix: markdown heading prefix for value size (default "## ")
     """
     elements = [
         {"tag": "markdown", "content": f"<font color='grey'>{label}</font>",
          "text_align": "center", "text_size": "notation"},
-        {"tag": "markdown", "content": f"## <font color='{value_color}'>{value}</font>",
+        {"tag": "markdown", "content": f"{value_prefix}<font color='{value_color}'>{value}</font>",
          "text_align": "center"},
     ]
     if sub_text:
@@ -624,6 +627,228 @@ def build_card(recipient, data, prev_data, month_label_str, month_key, mapping):
     }
 
 
+# ── Overall card ────────────────────────────────────────────────────────
+
+def _build_leader_summary(data, cf_data):
+    """Build a compact per-leader summary markdown block.
+
+    Each line: • **Leader** — 现金流 X | 距2倍奖金订单差 Y（tag）| PMS在途 Z | 7月 W（tag）
+    """
+    lines = []
+    for leader, col in LEADER_COLUMN_MAP.items():
+        cf = cf_data.get(col) if cf_data else None
+        gap = data.get(METRIC_GAP_2X, {}).get(col)
+        pms = data.get(METRIC_PMS_RECEIVABLE, {}).get(col)
+        july = data.get(METRIC_JULY_CF_EST, {}).get(col)
+
+        parts = [f"现金流 {format_amount(cf)}"]
+
+        if gap is not None:
+            tag = "<font color='red'>**落后**</font>" if gap < 0 else "超额"
+            parts.append(f"距2倍奖金订单差 {format_amount(gap)}（{tag}）")
+
+        parts.append(f"PMS在途 {format_amount(pms)}")
+
+        if july is not None:
+            tag_text, tag_color = _july_tag(july, cf)
+            parts.append(
+                f"7月 {format_amount(july)}"
+                f"（<font color='{tag_color}'>{tag_text}</font>）"
+            )
+
+        lines.append(f"• **{leader}** — {' | '.join(parts)}")
+
+    return {
+        "tag": "markdown",
+        "content": "\n".join(lines),
+        "text_size": "normal",
+        "margin": "0px 0px 12px 0px",
+    }
+
+
+def _add_worst_rankings(body_elements, data, cf_data, mapping):
+    """Append risk rankings as KPI-card rows.
+
+    Two rows of 3 cards each:
+    - Row 1: worst-3 cash-flow teams (big red value)
+    - Row 2: worst-3 gap teams (big red value)
+    Each card shows team name (with leader) as label and the value as the hero.
+    """
+    leaders = mapping.get("leaders", {})
+
+    # ── Build team→leader reverse map ────────────────────────────────
+    team_leader = {}
+    for leader_name, sub_teams in leaders.items():
+        for teams in sub_teams.values():
+            for t in teams:
+                team_leader[t] = leader_name
+
+    # ── Collect and rank ──────────────────────────────────────────────
+    cf_ranked = []
+    gap_ranked = []
+    for t, leader_name in team_leader.items():
+        t_cf = sum_across(cf_data, [t]) if cf_data else None
+        if isinstance(t_cf, (int, float)):
+            cf_ranked.append((t, t_cf, leader_name))
+        t_gap = data.get(METRIC_GAP_2X, {}).get(t)
+        if isinstance(t_gap, (int, float)):
+            gap_ranked.append((t, t_gap, leader_name))
+
+    cf_ranked.sort(key=lambda x: x[1])
+    gap_ranked.sort(key=lambda x: x[1])
+
+    # ── Section title ─────────────────────────────────────────────────
+    body_elements.append({
+        "tag": "markdown",
+        "content": "**⚠️ 风险榜单**",
+        "text_size": "title",
+        "margin": "0px 0px 8px 0px",
+    })
+
+    # ── Row 1: 现金流最差前3 ──────────────────────────────────────────
+    body_elements.append({
+        "tag": "markdown",
+        "content": "现金流最差前3",
+        "text_size": "normal",
+        "margin": "0px 0px 4px 0px",
+    })
+    body_elements.append(_kpi_card_row(
+        [_risk_card(t, v, l, "现金流") for t, v, l in cf_ranked[:3]]
+    ))
+
+    # ── Row 2: 差距最大前3 ────────────────────────────────────────────
+    body_elements.append({
+        "tag": "markdown",
+        "content": "距2倍奖金差最大前3",
+        "text_size": "normal",
+        "margin": "12px 0px 4px 0px",
+    })
+    body_elements.append(_kpi_card_row(
+        [_risk_card(t, v, l, "gap") for t, v, l in gap_ranked[:3]]
+    ))
+
+
+def _risk_card(team_name, value, leader_name, metric_type):
+    """Build a KPI card for a risk-ranking entry (inline text, no heading)."""
+    label = f"{team_name}（{leader_name}）"
+    return _kpi_card(label, format_amount(value), value_color="red",
+                     value_prefix="")
+
+
+def _kpi_card_row(cards):
+    """Wrap 2 or 3 KPI cards in a column_set row."""
+    return {
+        "tag": "column_set",
+        "flex_mode": "none",
+        "horizontal_spacing": "8px",
+        "margin": "0px 0px 12px 0px",
+        "columns": cards,
+    }
+
+
+def build_overall_card(recipient, data, prev_data, month_label_str, month_key,
+                       mapping):
+    """Build a Card 2.0 JSON object for the overall team view.
+
+    Top half: 2×2 global KPIs from the 合计 column.
+    Bottom half: one compact summary line per Leader.
+    """
+    cf_name, cf_data = find_latest_cashflow(data)
+
+    TOTAL_COL = mapping.get("boss", "合计")
+
+    # ── Global KPI values ────────────────────────────────────────────
+    pms_val = data.get(METRIC_PMS_RECEIVABLE, {}).get(TOTAL_COL)
+    cf_val = cf_data.get(TOTAL_COL) if cf_data else None
+    target_val = data.get(METRIC_REVENUE_TARGET_2X, {}).get(TOTAL_COL)
+    gap_val = data.get(METRIC_GAP_2X, {}).get(TOTAL_COL)
+    july_cf = data.get(METRIC_JULY_CF_EST, {}).get(TOTAL_COL)
+
+    subtitle = "电商团队 · 千元"
+
+    body_elements = []
+
+    # ── Row 1: PMS在途 + 累计现金流 ──────────────────────────────────
+    pms_sub = _pms_mom_text(pms_val, prev_data, [TOTAL_COL])
+
+    cf_sub_parts = []
+    cf_status = _cf_status_text(cf_val)
+    if cf_status:
+        cf_sub_parts.append(cf_status)
+    cf_mom = _cf_mom_text(cf_val, prev_data, [TOTAL_COL])
+    if cf_mom:
+        cf_sub_parts.append(cf_mom)
+    cf_sub = "，".join(cf_sub_parts) if cf_sub_parts else None
+
+    cf_color = "red" if (cf_val is not None and cf_val < 0) else "blue"
+    if cf_name and "_" in cf_name:
+        cf_date_label = cf_name.rsplit("_", 1)[-1]
+    else:
+        cf_date_label = cf_name or "累计现金流"
+
+    body_elements.append(_kpi_row(
+        _kpi_card("PMS预计回款（在途）", format_amount(pms_val), pms_sub),
+        _kpi_card(f"累计现金流（{cf_date_label}）", format_amount(cf_val), cf_sub,
+                  value_color=cf_color),
+    ))
+
+    # ── Row 2: 回款目标 + 在途差距 ──────────────────────────────────
+    gap_color = "red" if (gap_val is not None and gap_val < 0) else \
+                ("green" if (gap_val is not None and gap_val >= 0) else "blue")
+    gap_sub = None
+    gap_sub_color = "grey"
+    if gap_val is not None:
+        if gap_val >= 0:
+            gap_sub = "超额"
+        else:
+            gap_sub = "落后"
+            gap_sub_color = "red"
+
+    body_elements.append(_kpi_row(
+        _kpi_card("回款目标（2倍奖金）", format_amount(target_val)),
+        _kpi_card("在途回款差距（2倍奖金）", format_amount(gap_val), gap_sub,
+                  value_color=gap_color, sub_color=gap_sub_color),
+    ))
+
+    # ── 7月现金流预估 ───────────────────────────────────────────────
+    if july_cf is not None:
+        tag_text, tag_color = _july_tag(july_cf, cf_val)
+        body_elements.append({
+            "tag": "markdown",
+            "content": (
+                f"7月现金流预估：**{format_amount(july_cf)} 千元**"
+                f"（<font color='{tag_color}'>{tag_text}</font>）"
+            ),
+            "text_size": "normal",
+            "margin": "0px 0px 8px 0px",
+        })
+
+    # ── Warning (only when overall gap is negative) ──────────────────
+    if gap_val is not None and gap_val < 0:
+        body_elements.append(_warning_block(gap_val, "全局", month_key))
+
+    # ── Leader summary ──────────────────────────────────────────────
+    body_elements.append(_section_title("Leader 摘要"))
+    body_elements.append(_build_leader_summary(data, cf_data))
+
+    # ── Risk rankings ────────────────────────────────────────────────
+    _add_worst_rankings(body_elements, data, cf_data, mapping)
+
+    # Footer
+    body_elements.append(_footer(month_label_str))
+
+    return {
+        "schema": "2.0",
+        "config": _card_config(),
+        "header": _header(month_label_str, subtitle),
+        "body": {
+            "direction": "vertical",
+            "padding": "12px 12px 20px 12px",
+            "elements": body_elements,
+        },
+    }
+
+
 # ── Output ───────────────────────────────────────────────────────────────
 
 def _write_card(path, card):
@@ -703,14 +928,22 @@ def main():
         name = recipient["name"]
         open_id = recipient.get("open_id", "")
 
-        card = build_card(
-            recipient, data, prev_data, month_label_str, month_key, mapping
-        )
+        if recipient.get("card_type") == "overall":
+            card = build_overall_card(
+                recipient, data, prev_data, month_label_str, month_key, mapping
+            )
+        else:
+            card = build_card(
+                recipient, data, prev_data, month_label_str, month_key, mapping
+            )
         path = out_dir / f"{name}.json"
         _write_card(path, card)
 
-        scope_count = len(recipient["scopes"])
-        status = f"{scope_count} scope{'s' if scope_count > 1 else ''}"
+        scope_count = len(recipient.get("scopes", []))
+        if scope_count:
+            status = f"{scope_count} scope{'s' if scope_count > 1 else ''}"
+        else:
+            status = "整体卡"
 
         if send and open_id:
             ok, msg = _send_card(path, open_id, dry_run=dry_run)

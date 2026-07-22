@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-21
+Last updated: 2026-07-22
 
 ## Current scope
 
@@ -58,16 +58,20 @@ The duplicate sub-team aggregate named `前端创新` is displayed as
 `前端创新汇总`.
 
 `notification-config.yaml` keeps notification scopes separate from the data
-model.  The configured recipients are 朱孝峰（赵华团队）、彭明阳（营销中台及自动化营销）和郭一鸣
-（大前端-APP及前端创新）。
+model. 个人卡收件人：朱孝峰（赵华团队）、彭明阳（营销中台及自动化营销）、郭一鸣
+（大前端-APP及前端创新）、张浩（交易中台）。整体卡收件人：孙磊（全局视角 + Leader 摘要 + 风险榜单）。
 
 通知为飞书 Interactive Card 2.0 格式，`scripts/notify.py` 生成 `.cards/人名.json`，
-通过 `lark-cli im +messages-send --msg-type interactive` 发送。
+通过 `lark-cli im +messages-send --msg-type interactive` 发送。支持 `card_type: overall`
+配置项区分个人卡和整体卡。
 
-每张卡片结构：header（标题不含人名，可转发）→ 每 scope 一个 section（分隔线隔开）
+每张个人卡片结构：header（标题不含人名，可转发）→ 每 scope 一个 section（分隔线隔开）
 → 2×2 指标卡（PMS在途 / 累计现金流 / 回款目标 / 在途差距）→ 7月现金流预估
 → 负差距红色警告块 → 团队明细（虚拟汇总展开成员缩进列表，独立团队空行分隔）
 → 数据来源脚注。
+
+整体卡片结构：2×2 全局 KPI（合计列）→ 7月预估 → 警告 → Leader 摘要（紧凑行）
+→ 风险榜单（现金流最差前3 + 差距最大前3，KPI 卡片风格，小号红色数字）。
 
 消息只提醒需关注的不足，不输出正向结论。团队明细字段顺序：现金流 → 距2倍奖金订单差 →
 PMS在途；落后标签用红色加粗。无远程可访问的看板地址，消息末尾用数据来源脚注代替链接。

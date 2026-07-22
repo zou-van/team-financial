@@ -21,3 +21,10 @@ recipients:
         teams: [大前端-APP]
       - leader: 沈晓华
         sub_team: 前端创新
+  - name: 张浩
+    open_id: ou_dbfd23a341fb5cf0c9518d851338c937
+    scopes:
+      - leader: 张浩
+  - name: 孙磊
+    open_id: ou_b82dea56631afe382d8ede23d96f53e7
+    card_type: overall

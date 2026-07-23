@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-22
+Last updated: 2026-07-23
 
 ## Current scope
 
@@ -135,8 +135,30 @@ picks up changed Markdown files.
 - After changing parsing, mapping, or generated data, run the parser and review
   the generated diffs. After frontend changes, run `npm run build`.
 
+## Task status
+
+### ✅ 已完成
+
+- **整体卡** (2026-07-22)：`scripts/notify.py` → `build_overall_card()` 已实现，收件人孙磊。
+  结构：2×2 全局 KPI → 7月现金流预估 → 警告块 → Leader 摘要（紧凑行）→ 风险榜单（现金流最差前3 + 差距最大前3）→ 数据来源脚注。
+- **张浩个人卡**：已实现，收件人张浩（交易中台）。
+- **个人卡 v2.0**：已实现，支持 `notification-config.yaml` 中 `card_type: overall` 区分整体卡/个人卡，
+  个人卡结构含 scope sections、2×2 指标卡、7月现金流预估、负差距警告、团队明细（虚拟汇总展开）。
+- **风险榜单**：已在整体卡中实现，KPI 卡片风格，现金流最差 & 差距最大各前3。
+- **Trend chart redesign**：curated metrics + 维度选择器（大团队/子团队/小团队）。
+- **Virtual aggregates**：`孙伟（汇总）`、`钱知麟（汇总）`、`前端创新汇总` 已在 parser 中生成。
+- **2026-04/05/06 数据**：已入库。
+
+### 🔴 待讨论
+
+- **知识库洞察系统** (2026-07-23)：整体卡增加管理层数据解读。方向：`knowledge-base.yaml` 存放财务管理认知，
+  `notify.py` 结合当月数据生成具体洞察插入整体卡。方案（规则引擎/LLM/混合/人工撰写）和维度设计待定。
+  详见 [[knowledge_base_insights]]。
+
 ## Working tree status
 
-As of this update, the implementation, generated data for 2026-04 through
-2026-06, and design updates are uncommitted. No deployment or commit status is
-asserted by this document.
+Uncommitted changes:
+- `data/2026-06.md` — 新增指标行：`文佐`、`预估订单-Linda`、`预估订单-孙伟`、`预估订单-蔡啸`（来自最新 Excel 源数据更新 `04629da`）
+- `data/index.json` — 对应 metric_whitelist 新增上述四个指标
+
+无其他未提交的实现改动。

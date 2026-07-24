@@ -149,16 +149,22 @@ picks up changed Markdown files.
 - **Virtual aggregates**：`孙伟（汇总）`、`钱知麟（汇总）`、`前端创新汇总` 已在 parser 中生成。
 - **2026-04/05/06 数据**：已入库。
 
-### 🔴 待讨论
+### 🟡 下一步：轻量知识图谱洞察系统
 
-- **知识库洞察系统** (2026-07-23)：整体卡增加管理层数据解读。方向：`knowledge-base.yaml` 存放财务管理认知，
-  `notify.py` 结合当月数据生成具体洞察插入整体卡。方案（规则引擎/LLM/混合/人工撰写）和维度设计待定。
-  详见 [[knowledge_base_insights]]。
+- **目标**：为整体卡增加可追溯的管理层数据解读，优先回答“哪些团队需关注、谁负责、什么指标触发、建议做什么”。
+- **已确认方案**：采用“结构化规则知识 + 当月事实图”的轻量实现，不在第一阶段引入图数据库或 LLM 作为判断来源。
+  - 新增 `knowledge-graph.yaml`：维护团队负责人、风险规则、解释模板与建议行动等长期知识。
+  - 新增 `scripts/insights.py`：读取最新月度数据与组织映射，匹配风险规则。
+  - 生成 `data/knowledge-graph-latest.json`：保存当月命中的团队、负责人、指标值、风险与行动建议。
+  - `scripts/notify.py` 消费该结果，为整体卡生成管理洞察；React 看板后续可增加洞察展示，第一阶段不要求图形化展示。
+- **首批固定查询**：
+  1. 本月哪些团队触发高风险？
+  2. 每项风险由谁负责、相关数值是多少？
+  3. 每项风险建议下一步做什么？
+- **实施顺序**：先共同确定首批 5 条风险规则，再实现 YAML 结构、洞察生成脚本和整体卡接入；后续再按需要增加订单、项目、会议纪要和时间趋势节点。
 
 ## Working tree status
 
-Uncommitted changes:
-- `data/2026-06.md` — 新增指标行：`文佐`、`预估订单-Linda`、`预估订单-孙伟`、`预估订单-蔡啸`（来自最新 Excel 源数据更新 `04629da`）
-- `data/index.json` — 对应 metric_whitelist 新增上述四个指标
-
-无其他未提交的实现改动。
+As of 2026-07-23, the working tree is clean. The previously noted 2026-06
+metric updates have been incorporated; no uncommitted implementation or data
+changes remain.

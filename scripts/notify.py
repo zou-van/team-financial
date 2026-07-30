@@ -13,7 +13,7 @@ import re
 import subprocess
 import sys
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -189,14 +189,14 @@ def find_latest_cashflow(metrics):
     for name in metrics:
         if name == METRIC_CASH_FLOW_PREFIX:
             # Exact match — no date suffix
-            candidates.append((datetime(2099, 12, 31), name))
+            candidates.append((datetime(2099, 12, 31, tzinfo=timezone.utc), name))
         elif name.startswith(METRIC_CASH_FLOW_PREFIX + "_"):
             suffix = name[len(METRIC_CASH_FLOW_PREFIX) + 1:]
             try:
                 # Normalise: "2026.6.30" or "2026.06.30"
                 parts = [int(x) for x in re.split(r"[._]", suffix) if x]
                 if len(parts) == 3:
-                    candidates.append((datetime(*parts), name))
+                    candidates.append((datetime(*parts, tzinfo=timezone.utc), name))
             except (ValueError, TypeError):
                 continue
 

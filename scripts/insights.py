@@ -16,17 +16,28 @@ DATA_DIR = BASE_DIR / "data"
 KNOWLEDGE_FILE = BASE_DIR / "knowledge-graph.yaml"
 OUTPUT_FILE = DATA_DIR / "knowledge-graph-latest.json"
 
-sys.path.insert(0, str(SCRIPT_DIR))
-from notify import (
-    METRIC_GAP_2X,
-    METRIC_PMS_RECEIVABLE,
-    METRIC_REVENUE_TARGET_2X,
-    find_latest_cashflow,
-    find_latest_month,
-    load_yaml,
-    month_key_from_path,
-    parse_md,
-)
+if __package__:
+    from .notify import (
+        METRIC_GAP_2X,
+        METRIC_PMS_RECEIVABLE,
+        METRIC_REVENUE_TARGET_2X,
+        find_latest_cashflow,
+        find_latest_month,
+        load_yaml,
+        month_key_from_path,
+        parse_md,
+    )
+else:
+    from notify import (
+        METRIC_GAP_2X,
+        METRIC_PMS_RECEIVABLE,
+        METRIC_REVENUE_TARGET_2X,
+        find_latest_cashflow,
+        find_latest_month,
+        load_yaml,
+        month_key_from_path,
+        parse_md,
+    )
 
 METRIC_YEAR_END_GAP_2X = "全年回款差距（+超额/-落后）-2倍奖金"
 

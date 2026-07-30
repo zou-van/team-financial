@@ -1,0 +1,62 @@
+version: 1
+
+states:
+  - inbox
+  - spec
+  - planned
+  - building
+  - verifying
+  - review
+  - done
+
+context_policy:
+  analysis: same_context
+  implementation: new_context_only_after_user_confirmation
+  verification: implementation_context
+  review: coordinator_context
+
+context_transitions:
+  - from: planned
+    to: building
+    required_user_command: "进入开发阶段，创建新的开发上下文。"
+    required_tool: create_thread
+    required_task_fields:
+      - development_thread_id
+      - development_thread_status
+    rule: "未成功创建开发上下文，不得把任务状态改为 building。"
+  - from: building
+    to: verifying
+    required_task_fields:
+      - changed_files
+      - verification_commands
+      - verification_result
+    rule: "开发上下文必须先把改动和验证证据写回任务文件。"
+  - from: verifying
+    to: review
+    required_task_fields:
+      - verification_result
+    rule: "主控上下文读取验证结果后，才能进入 review。"
+
+budgets:
+  small:
+    max_verification_rounds: 2
+    token_budget: 10000
+    time_budget_minutes: 30
+  normal:
+    max_verification_rounds: 3
+    token_budget: 25000
+    time_budget_minutes: 60
+  large:
+    max_verification_rounds: 5
+    token_budget: 50000
+    time_budget_minutes: 120
+
+default_task_size: normal
+
+gates:
+  spec_requires_user_confirmation: true
+  planned_requires_file_scope: true
+  building_requires_development_thread: true
+  verifying_requires_recorded_evidence: true
+  done_requires_user_acceptance: true
+  formal_notification_requires_manual_confirmation: true

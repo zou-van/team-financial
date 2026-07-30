@@ -6,3 +6,4 @@ __pycache__/
 .cards/
 .tmp-card.json
 .claude/worktrees/
+.env.local

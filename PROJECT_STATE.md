@@ -1,6 +1,6 @@
 # Project State
 
-Last updated: 2026-07-23
+Last updated: 2026-07-27
 
 ## Current scope
 
@@ -149,22 +149,42 @@ picks up changed Markdown files.
 - **Virtual aggregates**：`孙伟（汇总）`、`钱知麟（汇总）`、`前端创新汇总` 已在 parser 中生成。
 - **2026-04/05/06 数据**：已入库。
 
-### 🟡 下一步：轻量知识图谱洞察系统
+### 🟠 当前进行中：轻量知识图谱洞察系统
 
 - **目标**：为整体卡增加可追溯的管理层数据解读，优先回答“哪些团队需关注、谁负责、什么指标触发、建议做什么”。
-- **已确认方案**：采用“结构化规则知识 + 当月事实图”的轻量实现，不在第一阶段引入图数据库或 LLM 作为判断来源。
+- **已确认方案**：采用“结构化规则知识 + 当月事实图”的轻量实现，不引入图数据库；LLM 负责基于规则和事实生成表达，规则分析作为兜底。
   - 新增 `knowledge-graph.yaml`：维护团队负责人、风险规则、解释模板与建议行动等长期知识。
-  - 新增 `scripts/insights.py`：读取最新月度数据与组织映射，匹配风险规则。
+  - 新增 `scripts/insights.py`：读取最新月度数据与组织映射，匹配风险规则，并将排名前三团队事实与知识规则交给 DeepSeek 生成管理层洞察。
   - 生成 `data/knowledge-graph-latest.json`：保存当月命中的团队、负责人、指标值、风险与行动建议。
-  - `scripts/notify.py` 消费该结果，为整体卡生成管理洞察；React 看板后续可增加洞察展示，第一阶段不要求图形化展示。
+  - `scripts/notify.py` 消费该结果，为整体卡生成管理洞察；模型调用失败时回退到规则洞察。
 - **首批固定查询**：
   1. 本月哪些团队触发高风险？
   2. 每项风险由谁负责、相关数值是多少？
   3. 每项风险建议下一步做什么？
 - **实施顺序**：先共同确定首批 5 条风险规则，再实现 YAML 结构、洞察生成脚本和整体卡接入；后续再按需要增加订单、项目、会议纪要和时间趋势节点。
 
+### 当前实现与待优化
+
+- 首批 3 类业务规则已确定并实现：累计现金流为负、PMS 在途覆盖现金流缺口关系、10 月底前考虑 2 倍奖金的出单进度。
+- `knowledge-graph.yaml`、`scripts/insights.py`、`data/knowledge-graph-latest.json` 已建立，整体卡已接入管理层洞察。
+- 所有消息卡 KPI 顺序统一为：累计现金流 → PMS预计回款（在途）→ 回款目标（2倍奖金）→ 在途单回款差距（2倍奖金）。
+- 整体卡当前顺序为：Leader 摘要 → 风险榜单 → 财务数据洞察；Leader 摘要顺序为现金流 → 下月预计现金流 → PMS在途 → 2倍奖金差距。当前版本已发送给用户和孙磊验证。
+- 财务数据洞察已拆成“现金流分析”和“全年订单分析”两个 topic，只分析风险榜单前 3 个不同团队；每个指标后紧跟对应动作。
+- 洞察表达改为按指标连续分析，不再分“风险 / 措施”两栏：现金流指标后紧跟现金流判断，PMS 在途指标后紧跟“严格追踪在途单回款情况”，2 倍奖金差距后紧跟出单计划判断和业务 Owner 动作。
+- 2 倍奖金缺口的卡片文案不展示计算出的进度差额，只说明当前差距代表未按出单计划推进、今年财务目标存在无法完成风险，并提示与业务 Owner 确认后续出单计划。
+- 若 2 倍奖金在途回款差距达到当前阶段应有出单进度，则对排名前三团队明确说明“符合当前出单计划，风险不大”，并提示团队按计划持续推进新订单。
+- 现金流洞察规则已调整为：当月累计现金流为负时，先看下月现金流预估；下月预估转正则只持续跟进，下月预估仍为负才继续检查 PMS 在途金额。
+- 2 倍奖金缺口规则仍按距离 10 月底的剩余月份判断是否匹配出单计划，但只分析风险榜单前 3 个不同团队；对外洞察只展示当前差距、计划判断和后续动作，不展示剩余月份或计算出的进度下限。
+- 2026-06 结果目前生成 32 个团队实体、41 条规则命中；完整规则事实保存在 `data/knowledge-graph-latest.json`，整体卡只展示风险榜单前三团队的合并洞察。当前版本已发送给孙磊。
+- 用户提出将长期财务知识与当月事实一起交给 LLM 生成管理层洞察。当前已接入 DeepSeek：`scripts/insights.py` 将知识规则、排名前三团队事实和规则命中一起提交模型，输出现金流分析与全年订单分析；调用失败时自动回退到规则洞察。
+- 财务数据原始单位为千元；LLM 洞察提示词已明确禁止换算为万元，生成结果需保留“千元”单位。
+- LLM 洞察金额已增加统一格式化：千分位逗号、两位小数、金额与“千元”之间留空格，例如 `-1,547.45 千元`。
+- PMS 在途覆盖判断以“下月预估现金流缺口”为比较基准；若在途金额仅高出缺口不超过 10%，洞察表述为两者基本持平、现金流转正挑战较大。
+- `.env.local` 已配置 `DEEPSEEK_API_KEY` 和 `DEEPSEEK_MODEL`，文件已加入 `.gitignore`；密钥不会写入结果或消息。
+
 ## Working tree status
 
-As of 2026-07-23, the working tree is clean. The previously noted 2026-06
-metric updates have been incorporated; no uncommitted implementation or data
-changes remain.
+As of 2026-07-28, the knowledge-graph implementation, DeepSeek integration,
+notification updates, and generated insight data are ready to commit. Local
+dependency/build directories, card previews, and skill metadata remain
+untracked and are ignored or intentionally excluded from the commit.

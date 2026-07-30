@@ -13,7 +13,7 @@ import re
 import subprocess
 import sys
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -22,6 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 NOTIFICATION_CONFIG = BASE_DIR / "notification-config.yaml"
 MAPPING_FILE = BASE_DIR / "team-mapping.yaml"
+INSIGHTS_FILE = DATA_DIR / "knowledge-graph-latest.json"
 
 # ── Key metric identifiers ──────────────────────────────────────────────
 METRIC_PMS_RECEIVABLE = "PMS预计回款（在途）"
@@ -48,6 +49,15 @@ LEADER_COLUMN_MAP = {
 def load_yaml(path):
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def load_insights():
+    """Load generated management insights, if available."""
+    if not INSIGHTS_FILE.exists():
+        return []
+    with open(INSIGHTS_FILE, encoding="utf-8") as f:
+        payload = json.load(f)
+    return payload.get("llm_insights") or payload.get("insights", [])
 
 
 def find_latest_month():
@@ -179,14 +189,14 @@ def find_latest_cashflow(metrics):
     for name in metrics:
         if name == METRIC_CASH_FLOW_PREFIX:
             # Exact match — no date suffix
-            candidates.append((datetime(2099, 12, 31), name))
+            candidates.append((datetime(2099, 12, 31, tzinfo=timezone.utc), name))
         elif name.startswith(METRIC_CASH_FLOW_PREFIX + "_"):
             suffix = name[len(METRIC_CASH_FLOW_PREFIX) + 1:]
             try:
                 # Normalise: "2026.6.30" or "2026.06.30"
                 parts = [int(x) for x in re.split(r"[._]", suffix) if x]
                 if len(parts) == 3:
-                    candidates.append((datetime(*parts), name))
+                    candidates.append((datetime(*parts, tzinfo=timezone.utc), name))
             except (ValueError, TypeError):
                 continue
 
@@ -547,7 +557,7 @@ def build_card(recipient, data, prev_data, month_label_str, month_key, mapping):
         target_val = sum_across(data.get(METRIC_REVENUE_TARGET_2X, {}), teams)
         gap_val  = sum_across(data.get(METRIC_GAP_2X, {}), teams)
 
-        # ── Row 1: PMS在途 + 累计现金流 ─────────────────────────────
+        # ── Row 1: 累计现金流 + PMS在途 ─────────────────────────────
         pms_sub = _pms_mom_text(pms_val, prev_data, teams)
 
         cf_sub_parts = []
@@ -567,9 +577,9 @@ def build_card(recipient, data, prev_data, month_label_str, month_key, mapping):
             cf_date_label = cf_name or "累计现金流"
 
         body_elements.append(_kpi_row(
-            _kpi_card("PMS预计回款（在途）", format_amount(pms_val), pms_sub),
             _kpi_card(f"累计现金流（{cf_date_label}）", format_amount(cf_val), cf_sub,
                       value_color=cf_color),
+            _kpi_card("PMS预计回款（在途）", format_amount(pms_val), pms_sub),
         ))
 
         # ── Row 2: 回款目标 + 在途差距 ─────────────────────────────
@@ -586,7 +596,7 @@ def build_card(recipient, data, prev_data, month_label_str, month_key, mapping):
 
         body_elements.append(_kpi_row(
             _kpi_card("回款目标（2倍奖金）", format_amount(target_val)),
-            _kpi_card("在途回款差距（2倍奖金）", format_amount(gap_val), gap_sub,
+            _kpi_card("在途单回款差距（2倍奖金）", format_amount(gap_val), gap_sub,
                       value_color=gap_color, sub_color=gap_sub_color),
         ))
 
@@ -632,7 +642,7 @@ def build_card(recipient, data, prev_data, month_label_str, month_key, mapping):
 def _build_leader_summary(data, cf_data):
     """Build a compact per-leader summary markdown block.
 
-    Each line: • **Leader** — 现金流 X | 距2倍奖金订单差 Y（tag）| PMS在途 Z | 7月 W（tag）
+    Each line: • **Leader** — 现金流 X | 下月预计现金流 Y | PMS在途 Z | 2倍奖金差距 W（tag）
     """
     lines = []
     for leader, col in LEADER_COLUMN_MAP.items():
@@ -643,18 +653,18 @@ def _build_leader_summary(data, cf_data):
 
         parts = [f"现金流 {format_amount(cf)}"]
 
-        if gap is not None:
-            tag = "<font color='red'>**落后**</font>" if gap < 0 else "超额"
-            parts.append(f"距2倍奖金订单差 {format_amount(gap)}（{tag}）")
-
-        parts.append(f"PMS在途 {format_amount(pms)}")
-
         if july is not None:
             tag_text, tag_color = _july_tag(july, cf)
             parts.append(
-                f"7月 {format_amount(july)}"
+                f"下月预计现金流 {format_amount(july)}"
                 f"（<font color='{tag_color}'>{tag_text}</font>）"
             )
+
+        parts.append(f"PMS在途 {format_amount(pms)}")
+
+        if gap is not None:
+            tag = "<font color='red'>**落后**</font>" if gap < 0 else "超额"
+            parts.append(f"2倍奖金差距 {format_amount(gap)}（{tag}）")
 
         lines.append(f"• **{leader}** — {' | '.join(parts)}")
 
@@ -713,7 +723,8 @@ def _add_worst_rankings(body_elements, data, cf_data, mapping):
         "margin": "0px 0px 4px 0px",
     })
     body_elements.append(_kpi_card_row(
-        [_risk_card(t, v, l, "现金流") for t, v, l in cf_ranked[:3]]
+        [_risk_card(team, value, leader, "现金流")
+         for team, value, leader in cf_ranked[:3]]
     ))
 
     # ── Row 2: 差距最大前3 ────────────────────────────────────────────
@@ -724,8 +735,220 @@ def _add_worst_rankings(body_elements, data, cf_data, mapping):
         "margin": "12px 0px 4px 0px",
     })
     body_elements.append(_kpi_card_row(
-        [_risk_card(t, v, l, "gap") for t, v, l in gap_ranked[:3]]
+        [_risk_card(team, value, leader, "gap")
+         for team, value, leader in gap_ranked[:3]]
     ))
+
+    ranked_teams = []
+    for team_name, _, _ in cf_ranked[:3] + gap_ranked[:3]:
+        if team_name not in ranked_teams:
+            ranked_teams.append(team_name)
+        if len(ranked_teams) == 3:
+            break
+    return ranked_teams
+
+
+def _add_management_insights(body_elements, insights, ranked_teams):
+    """Append financial insights in cash-flow and annual-order topics."""
+    if not insights or not ranked_teams:
+        return
+
+    if "cashflow_analysis" in insights[0] or "order_analysis" in insights[0]:
+        _add_llm_management_insights(body_elements, insights, ranked_teams)
+        return
+
+    body_elements.append(_section_title("财务数据洞察"))
+    grouped = {team: [] for team in ranked_teams}
+    for item in insights:
+        if item["team"] in grouped:
+            grouped[item["team"]].append(item)
+
+    topic_lines = [
+        _compact_team_insight(team, grouped[team])
+        for team in ranked_teams
+        if grouped[team]
+    ]
+    cashflow_lines = [item[0] for item in topic_lines if item[0]]
+    order_lines = [item[1] for item in topic_lines if item[1]]
+    if not cashflow_lines and not order_lines:
+        return
+    for title, lines in (("现金流分析", cashflow_lines), ("全年订单分析", order_lines)):
+        if not lines:
+            continue
+        body_elements.append({
+            "tag": "markdown",
+            "content": f"**{title}**",
+            "text_size": "normal",
+            "margin": "0px 0px 4px 0px",
+        })
+        body_elements.append({
+            "tag": "markdown",
+            "content": "\n\n".join(lines),
+            "text_size": "normal",
+            "margin": "0px 0px 8px 0px",
+        })
+
+
+def _add_llm_management_insights(body_elements, insights, ranked_teams):
+    """Render concise model-written insights while preserving card structure."""
+    grouped = {team: [] for team in ranked_teams}
+    for item in insights:
+        if item.get("team") in grouped:
+            grouped[item["team"]].append(item)
+
+    cashflow_lines = []
+    order_lines = []
+    for team in ranked_teams:
+        item = grouped[team][0] if grouped[team] else None
+        if not item:
+            continue
+        risk_color = "red" if item.get("risk_level") == "high" else "orange"
+        prefix = f"• <font color='{risk_color}'>关注</font> **{team}**"
+        if item.get("leader"):
+            prefix += f"（{item['leader']}）"
+        if item.get("cashflow_analysis"):
+            cashflow_lines.append(f"{prefix}：{item['cashflow_analysis']}")
+        if item.get("order_analysis"):
+            order_lines.append(f"{prefix}：{item['order_analysis']}")
+
+    if not cashflow_lines and not order_lines:
+        return
+    body_elements.append(_section_title("财务数据洞察"))
+    for title, lines in (("现金流分析", cashflow_lines), ("全年订单分析", order_lines)):
+        if not lines:
+            continue
+        body_elements.append({
+            "tag": "markdown",
+            "content": f"**{title}**",
+            "text_size": "normal",
+            "margin": "0px 0px 4px 0px",
+        })
+        body_elements.append({
+            "tag": "markdown",
+            "content": "\n\n".join(lines),
+            "text_size": "normal",
+            "margin": "0px 0px 8px 0px",
+        })
+
+
+def _compact_team_insight(team_name, items):
+    """Return one cash-flow line and one annual-order line for a team."""
+    first = items[0]
+    values = {}
+    for item in items:
+        values.update(item.get("values", {}))
+
+    cf = next((v for k, v in values.items() if k.startswith(METRIC_CASH_FLOW_PREFIX)), None)
+    pms = values.get(METRIC_PMS_RECEIVABLE)
+    gap = values.get(METRIC_GAP_2X)
+    forecast_name, forecast = next(
+        ((k, v) for k, v in values.items() if k.endswith("月现金流预估")),
+        (None, None),
+    )
+    current_name = next(
+        (k for k in values if k.startswith(METRIC_CASH_FLOW_PREFIX)),
+        None,
+    )
+    current_month = _metric_month(current_name)
+    forecast_month = _metric_month(forecast_name)
+    cashflow_paragraphs = []
+    order_paragraphs = []
+
+    if cf is not None and cf < 0:
+        if forecast is None:
+            cashflow_paragraphs.append(
+                f"{current_month}现金流为负 {format_amount(cf)}，需补充下月预估并继续跟进回款。"
+            )
+        elif forecast < 0:
+            if forecast < cf:
+                cashflow_paragraphs.append(
+                    f"现金流缺口从{current_month} {format_amount(cf)}"
+                    f"扩大至{forecast_month}预估 {format_amount(forecast)}，现金流风险在加大。"
+                )
+            else:
+                cashflow_paragraphs.append(
+                    f"{current_month}现金流为负 {format_amount(cf)}，"
+                    f"{forecast_month}预估仍为负 {format_amount(forecast)}，现金流仍有压力。"
+                )
+        else:
+            cashflow_paragraphs.append(
+                f"{current_month}现金流为负 {format_amount(cf)}，"
+                f"{forecast_month}预估转正 {format_amount(forecast)}，持续跟进回款确认预估兑现。"
+            )
+
+    if pms is not None and forecast is not None and forecast < 0:
+        forecast_gap = abs(forecast)
+        if pms >= forecast_gap:
+            cashflow_paragraphs.append(
+                f"PMS在途 {format_amount(pms)} 可覆盖{forecast_month}预估缺口 "
+                f"{format_amount(forecast_gap)}，团队与业务Owner严格追踪在途单回款情况。"
+            )
+        else:
+            cashflow_paragraphs.append(
+                f"PMS在途 {format_amount(pms)} 不足覆盖{forecast_month}预估缺口 "
+                f"{format_amount(forecast_gap)}，团队与业务Owner同时追踪在途回款和新出单。"
+            )
+
+    progress_item = next(
+        (item for item in items if item["rule_id"] in {
+            "order_progress_behind_before_october",
+            "order_progress_on_plan_before_october",
+        }),
+        None,
+    )
+    if progress_item:
+        gap = progress_item.get("values", {}).get(METRIC_GAP_2X, gap)
+        if progress_item["rule_id"] == "order_progress_on_plan_before_october" and gap is not None:
+            order_paragraphs.append(
+                f"2倍奖金在途回款差距为 {format_amount(gap)}，符合当前出单计划，"
+                "风险不大，团队按计划持续推进新订单。"
+            )
+        elif gap is not None:
+            order_paragraphs.append(
+                f"2倍奖金在途回款差距为 {format_amount(gap)}，"
+                "未按出单计划推进，存在今年财务目标无法完成的风险；"
+                "与业务Owner沟通确认后续出单计划。"
+            )
+    elif "october_gap_not_ready" in {item["rule_id"] for item in items} and gap is not None:
+        order_paragraphs.append(
+            f"2倍奖金在途回款差距为 {format_amount(gap)}，"
+            "10月底仍未达标，存在今年财务目标无法完成的风险；"
+            "与业务Owner沟通确认后续出单计划。"
+        )
+
+    def line(text, relevant_items):
+        level = "高风险" if any(i["risk_level"] == "high" for i in relevant_items) else "需关注"
+        color = "red" if level == "高风险" else "orange"
+        return f"• <font color='{color}'>{level}</font> **{team_name}**（{first['leader']}）：{text}"
+
+    cashflow_line = line(" ".join(cashflow_paragraphs), [
+        item for item in items
+        if item["rule_id"] in {
+            "negative_cumulative_cashflow",
+            "cashflow_negative_next_month_improves",
+            "cashflow_negative_next_month_still_negative",
+            "pms_in_transit_can_cover_cashflow_gap",
+            "pms_in_transit_cannot_cover_cashflow_gap",
+        }
+    ]) if cashflow_paragraphs else ""
+    order_line = line(" ".join(order_paragraphs), [
+        item for item in items
+        if item["rule_id"] in {
+            "order_progress_behind_before_october",
+            "order_progress_on_plan_before_october",
+            "october_gap_not_ready",
+            "year_end_gap_not_met",
+        }
+    ]) if order_paragraphs else ""
+    return cashflow_line, order_line
+
+
+def _metric_month(metric_name):
+    """Extract a display month from a metric name."""
+    if not metric_name:
+        return "本月"
+    match = re.search(r"(?:累计现金流_\d{4}\.)?(\d{1,2})(?:\.|月)", metric_name)
+    return f"{match.group(1)}月" if match else "本月"
 
 
 def _risk_card(team_name, value, leader_name, metric_type):
@@ -747,7 +970,7 @@ def _kpi_card_row(cards):
 
 
 def build_overall_card(recipient, data, prev_data, month_label_str, month_key,
-                       mapping):
+                       mapping, insights=None):
     """Build a Card 2.0 JSON object for the overall team view.
 
     Top half: 2×2 global KPIs from the 合计 column.
@@ -768,7 +991,7 @@ def build_overall_card(recipient, data, prev_data, month_label_str, month_key,
 
     body_elements = []
 
-    # ── Row 1: PMS在途 + 累计现金流 ──────────────────────────────────
+    # ── Row 1: 累计现金流 + PMS在途 ──────────────────────────────────
     pms_sub = _pms_mom_text(pms_val, prev_data, [TOTAL_COL])
 
     cf_sub_parts = []
@@ -787,9 +1010,9 @@ def build_overall_card(recipient, data, prev_data, month_label_str, month_key,
         cf_date_label = cf_name or "累计现金流"
 
     body_elements.append(_kpi_row(
-        _kpi_card("PMS预计回款（在途）", format_amount(pms_val), pms_sub),
         _kpi_card(f"累计现金流（{cf_date_label}）", format_amount(cf_val), cf_sub,
                   value_color=cf_color),
+        _kpi_card("PMS预计回款（在途）", format_amount(pms_val), pms_sub),
     ))
 
     # ── Row 2: 回款目标 + 在途差距 ──────────────────────────────────
@@ -806,7 +1029,7 @@ def build_overall_card(recipient, data, prev_data, month_label_str, month_key,
 
     body_elements.append(_kpi_row(
         _kpi_card("回款目标（2倍奖金）", format_amount(target_val)),
-        _kpi_card("在途回款差距（2倍奖金）", format_amount(gap_val), gap_sub,
+        _kpi_card("在途单回款差距（2倍奖金）", format_amount(gap_val), gap_sub,
                   value_color=gap_color, sub_color=gap_sub_color),
     ))
 
@@ -832,7 +1055,10 @@ def build_overall_card(recipient, data, prev_data, month_label_str, month_key,
     body_elements.append(_build_leader_summary(data, cf_data))
 
     # ── Risk rankings ────────────────────────────────────────────────
-    _add_worst_rankings(body_elements, data, cf_data, mapping)
+    ranked_teams = _add_worst_rankings(body_elements, data, cf_data, mapping)
+
+    # ── Management insights for ranked teams ────────────────────────
+    _add_management_insights(body_elements, insights or [], ranked_teams)
 
     # Footer
     body_elements.append(_footer(month_label_str))
@@ -872,7 +1098,7 @@ def _send_card(path, open_id, dry_run=False):
 
     result = subprocess.run(
         cmd, capture_output=True, text=True, timeout=30,
-        cwd=BASE_DIR,
+        cwd=BASE_DIR, check=False,
     )
     try:
         data = json.loads(result.stdout)
@@ -902,6 +1128,7 @@ def main():
 
     notification_config = load_yaml(NOTIFICATION_CONFIG)
     mapping = load_yaml(MAPPING_FILE)
+    insights = load_insights()
 
     latest_file = find_latest_month()
     month_key = month_key_from_path(latest_file)
@@ -918,7 +1145,7 @@ def main():
         prev_data = parse_md(prev_file)
         print(f"   上月数据: {prev_file.name} ({len(prev_data)} 个指标)")
     else:
-        print(f"   ⚠️ 上月数据缺失，环比无法计算")
+        print("   ⚠️ 上月数据缺失，环比无法计算")
     print()
 
     out_dir = BASE_DIR / ".cards"
@@ -930,7 +1157,8 @@ def main():
 
         if recipient.get("card_type") == "overall":
             card = build_overall_card(
-                recipient, data, prev_data, month_label_str, month_key, mapping
+                recipient, data, prev_data, month_label_str, month_key, mapping,
+                insights,
             )
         else:
             card = build_card(
@@ -958,7 +1186,7 @@ def main():
 
     if not send:
         print()
-        print(f"发送: python scripts/notify.py --send [--dry-run]")
+        print("发送: python scripts/notify.py --send [--dry-run]")
 
 
 if __name__ == "__main__":

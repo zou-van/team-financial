@@ -1,0 +1,74 @@
+# 轻量知识图谱：长期维护团队负责人、指标规则和管理动作。
+# 规则只描述业务判断；scripts/insights.py 负责读取最新月份并生成事实结果。
+leader_columns:
+  张浩: 交易中台
+  沈晓华: 沈晓华合计
+  赵华: 线上运营
+
+rules:
+  - id: negative_cumulative_cashflow
+    name: 累计现金流为负
+    type: negative_cashflow
+    risk_level: attention
+    explanation: 报表当月累计现金流为负，但下月现金流预估暂缺，先补充判断现金流是否好转。
+    action: 补充下月现金流预估，继续跟进回款。
+
+  - id: cashflow_negative_next_month_improves
+    name: 现金流下月预估好转
+    type: negative_cashflow_forecast
+    risk_level: attention
+    explanation: 报表当月累计现金流为负，但下月现金流预估已好转。
+    action: 持续跟进回款，确认下月预估能够兑现。
+
+  - id: cashflow_negative_next_month_still_negative
+    name: 现金流下月预估仍为负
+    type: negative_cashflow_forecast
+    risk_level: high
+    explanation: 报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。
+    action: 团队与业务Owner确认PMS在途单回款计划。
+
+  - id: pms_in_transit_can_cover_cashflow_gap
+    name: PMS在途单可覆盖现金流缺口
+    type: pms_vs_cashflow_gap
+    risk_level: attention
+    explanation: PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。
+    action: 团队与业务Owner严格追踪在途单回款情况。
+
+  - id: pms_in_transit_cannot_cover_cashflow_gap
+    name: PMS在途单不足以覆盖现金流缺口
+    type: pms_vs_cashflow_gap
+    risk_level: high
+    explanation: 即使现有PMS在途单全部回款，也不足以填补现金流缺口。
+    action: 团队与业务Owner同时追踪在途回款和新出单。
+
+  - id: order_progress_behind_before_october
+    name: 10月底前出单进度落后
+    type: order_progress
+    scope: risk_rank_top_3
+    risk_level: high
+    explanation: 独立于现金流预估，按距离10月底的剩余月份计算，考虑2倍奖金的在途回款差距低于应有进度。
+    action: 与业务Owner沟通确认后续出单计划。
+
+  - id: order_progress_on_plan_before_october
+    name: 10月底前出单进度符合计划
+    type: order_progress
+    scope: risk_rank_top_3
+    risk_level: attention
+    explanation: 考虑2倍奖金的在途回款差距达到当前阶段应有的出单进度，团队正在按计划推进新订单。
+    action: 团队按计划持续推进新订单。
+
+  - id: october_gap_not_ready
+    name: 10月底前考虑2倍奖金的在途回款差距未转正
+    type: order_progress
+    scope: risk_rank_top_3
+    risk_level: high
+    explanation: 订单通常需要2-3个月回款，10月底时考虑2倍奖金的在途回款差距应大于等于0。
+    action: 与业务Owner沟通确认后续出单计划。
+
+  - id: year_end_gap_not_met
+    name: 年底回款目标（考虑2倍奖金）未完成
+    type: year_end_gap
+    scope: risk_rank_top_3
+    risk_level: high
+    explanation: 到12月底，全年回款差距减2倍奖金应大于等于0。
+    action: 与业务Owner沟通确认后续出单计划。

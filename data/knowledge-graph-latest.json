@@ -1,0 +1,727 @@
+{
+  "generated_at": "2026-07-28T11:31:42",
+  "month": "2026-06",
+  "source_file": "2026-06.md",
+  "cashflow_metric": "累计现金流_2026.6.30",
+  "entities_checked": 32,
+  "insights": [
+    {
+      "level": "big_team",
+      "team": "沈晓华合计",
+      "leader": "沈晓华",
+      "column": "沈晓华合计",
+      "values": {
+        "累计现金流_2026.6.30": -1684.8,
+        "7月现金流预估": -2092.74
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "CRM Portal",
+      "leader": "沈晓华",
+      "column": "CRM Portal",
+      "values": {
+        "累计现金流_2026.6.30": -436.75,
+        "7月现金流预估": -504.81
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "CRM Portal",
+      "leader": "沈晓华",
+      "column": "CRM Portal",
+      "values": {
+        "累计现金流_2026.6.30": -436.75,
+        "PMS预计回款（在途）": 122.81
+      },
+      "rule_id": "pms_in_transit_cannot_cover_cashflow_gap",
+      "rule_name": "PMS在途单不足以覆盖现金流缺口",
+      "risk_level": "high",
+      "explanation": "即使现有PMS在途单全部回款，也不足以填补现金流缺口。",
+      "action": "团队与业务Owner同时追踪在途回款和新出单。",
+      "details": {
+        "cashflow_gap": 504.81,
+        "coverage_ratio": 0.24327964976922012
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "Coupon",
+      "leader": "沈晓华",
+      "column": "Coupon",
+      "values": {
+        "累计现金流_2026.6.30": -736.77,
+        "7月现金流预估": -782.77
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "Coupon",
+      "leader": "沈晓华",
+      "column": "Coupon",
+      "values": {
+        "累计现金流_2026.6.30": -736.77,
+        "PMS预计回款（在途）": 669.74
+      },
+      "rule_id": "pms_in_transit_cannot_cover_cashflow_gap",
+      "rule_name": "PMS在途单不足以覆盖现金流缺口",
+      "risk_level": "high",
+      "explanation": "即使现有PMS在途单全部回款，也不足以填补现金流缺口。",
+      "action": "团队与业务Owner同时追踪在途回款和新出单。",
+      "details": {
+        "cashflow_gap": 782.77,
+        "coverage_ratio": 0.8556025396987621
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "K点餐",
+      "leader": "赵华",
+      "column": "K点餐",
+      "values": {
+        "累计现金流_2026.6.30": -1042.06,
+        "7月现金流预估": -740.27
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "K点餐",
+      "leader": "赵华",
+      "column": "K点餐",
+      "values": {
+        "考虑2倍奖金在途回款差距（+超额/-落后）": -1668.14,
+        "回款目标（考虑2倍奖金）": 3157.79
+      },
+      "rule_id": "order_progress_behind_before_october",
+      "rule_name": "10月底前出单进度落后",
+      "risk_level": "high",
+      "explanation": "独立于现金流预估，按距离10月底的剩余月份计算，考虑2倍奖金的在途回款差距低于应有进度。",
+      "action": "与业务Owner沟通确认后续出单计划。",
+      "details": {
+        "remaining_months": 4,
+        "required_gap": -1263.116
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "PH点餐",
+      "leader": "赵华",
+      "column": "PH点餐",
+      "values": {
+        "累计现金流_2026.6.30": -1129.05,
+        "7月现金流预估": -389.19
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "Prime",
+      "leader": "赵华",
+      "column": "Prime",
+      "values": {
+        "累计现金流_2026.6.30": -766.92,
+        "7月现金流预估": -610.04
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "Promotion",
+      "leader": "张浩",
+      "column": "Promotion",
+      "values": {
+        "累计现金流_2026.6.30": -14.9,
+        "7月现金流预估": -63.43
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "企微社群",
+      "leader": "沈晓华",
+      "column": "企微社群",
+      "values": {
+        "累计现金流_2026.6.30": -954.04,
+        "7月现金流预估": -955.6
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "前端创新",
+      "leader": "沈晓华",
+      "column": "前端创新",
+      "values": {
+        "累计现金流_2026.6.30": -102.54,
+        "7月现金流预估": -39.16
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "孙伟（汇总）",
+      "leader": "沈晓华",
+      "column": "孙伟（汇总）",
+      "values": {
+        "累计现金流_2026.6.30": -831.31,
+        "7月现金流预估": -955.18
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "数据",
+      "leader": "沈晓华",
+      "column": "数据",
+      "values": {
+        "累计现金流_2026.6.30": -201.47,
+        "7月现金流预估": -0.26
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "点餐平台",
+      "leader": "赵华",
+      "column": "点餐平台",
+      "values": {
+        "累计现金流_2026.6.30": -754.15,
+        "7月现金流预估": -785.58
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "自动化营销",
+      "leader": "沈晓华",
+      "column": "自动化营销",
+      "values": {
+        "累计现金流_2026.6.30": -1385.21,
+        "7月现金流预估": -1520.06
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "自动化营销",
+      "leader": "沈晓华",
+      "column": "自动化营销",
+      "values": {
+        "考虑2倍奖金在途回款差距（+超额/-落后）": -1673.88,
+        "回款目标（考虑2倍奖金）": 3829.76
+      },
+      "rule_id": "order_progress_behind_before_october",
+      "rule_name": "10月底前出单进度落后",
+      "risk_level": "high",
+      "explanation": "独立于现金流预估，按距离10月底的剩余月份计算，考虑2倍奖金的在途回款差距低于应有进度。",
+      "action": "与业务Owner沟通确认后续出单计划。",
+      "details": {
+        "remaining_months": 4,
+        "required_gap": -1531.904
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "菜单&凌霄",
+      "leader": "张浩",
+      "column": "菜单&凌霄",
+      "values": {
+        "累计现金流_2026.6.30": -892.34,
+        "7月现金流预估": -399.06
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "small_team",
+      "team": "钱知麟（汇总）",
+      "leader": "赵华",
+      "column": "钱知麟（汇总）",
+      "values": {
+        "累计现金流_2026.6.30": -1664.53,
+        "7月现金流预估": -665.84
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "sub_team",
+      "team": "前端创新",
+      "leader": "沈晓华",
+      "column": "前端创新汇总",
+      "values": {
+        "累计现金流_2026.6.30": -304.01,
+        "7月现金流预估": -39.42
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "sub_team",
+      "team": "营销中台",
+      "leader": "沈晓华",
+      "column": "营销中台",
+      "values": {
+        "累计现金流_2026.6.30": -1785.35,
+        "7月现金流预估": -1910.78
+      },
+      "rule_id": "cashflow_negative_next_month_still_negative",
+      "rule_name": "现金流下月预估仍为负",
+      "risk_level": "high",
+      "explanation": "报表当月累计现金流为负，且下月现金流预估仍为负，需要进一步检查PMS在途单。",
+      "action": "团队与业务Owner确认PMS在途单回款计划。"
+    },
+    {
+      "level": "big_team",
+      "team": "沈晓华合计",
+      "leader": "沈晓华",
+      "column": "沈晓华合计",
+      "values": {
+        "累计现金流_2026.6.30": -1684.8,
+        "PMS预计回款（在途）": 10124.91
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 2092.74,
+        "coverage_ratio": 4.838111757791221
+      }
+    },
+    {
+      "level": "big_team",
+      "team": "线上运营",
+      "leader": "赵华",
+      "column": "线上运营",
+      "values": {
+        "累计现金流_2026.6.30": -1839.77,
+        "7月现金流预估": 150.3
+      },
+      "rule_id": "cashflow_negative_next_month_improves",
+      "rule_name": "现金流下月预估好转",
+      "risk_level": "attention",
+      "explanation": "报表当月累计现金流为负，但下月现金流预估已好转。",
+      "action": "持续跟进回款，确认下月预估能够兑现。"
+    },
+    {
+      "level": "small_team",
+      "team": "K点餐",
+      "leader": "赵华",
+      "column": "K点餐",
+      "values": {
+        "累计现金流_2026.6.30": -1042.06,
+        "PMS预计回款（在途）": 1249.92
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 740.27,
+        "coverage_ratio": 1.6884650195199051
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "PH点餐",
+      "leader": "赵华",
+      "column": "PH点餐",
+      "values": {
+        "考虑2倍奖金在途回款差距（+超额/-落后）": -397.12,
+        "回款目标（考虑2倍奖金）": 3834.93
+      },
+      "rule_id": "order_progress_on_plan_before_october",
+      "rule_name": "10月底前出单进度符合计划",
+      "risk_level": "attention",
+      "explanation": "考虑2倍奖金的在途回款差距达到当前阶段应有的出单进度，团队正在按计划推进新订单。",
+      "action": "团队按计划持续推进新订单。",
+      "details": {
+        "remaining_months": 4,
+        "required_gap": -1533.972
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "PH点餐",
+      "leader": "赵华",
+      "column": "PH点餐",
+      "values": {
+        "累计现金流_2026.6.30": -1129.05,
+        "PMS预计回款（在途）": 2808.36
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 389.19,
+        "coverage_ratio": 7.215909966854236
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "Prime",
+      "leader": "赵华",
+      "column": "Prime",
+      "values": {
+        "累计现金流_2026.6.30": -766.92,
+        "PMS预计回款（在途）": 896.62
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 610.04,
+        "coverage_ratio": 1.4697724739361355
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "Promotion",
+      "leader": "张浩",
+      "column": "Promotion",
+      "values": {
+        "累计现金流_2026.6.30": -14.9,
+        "PMS预计回款（在途）": 925.85
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 63.43,
+        "coverage_ratio": 14.59640548636292
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "企微社群",
+      "leader": "沈晓华",
+      "column": "企微社群",
+      "values": {
+        "累计现金流_2026.6.30": -954.04,
+        "PMS预计回款（在途）": 1238.99
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 955.6,
+        "coverage_ratio": 1.2965571368773545
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "前端创新",
+      "leader": "沈晓华",
+      "column": "前端创新",
+      "values": {
+        "累计现金流_2026.6.30": -102.54,
+        "PMS预计回款（在途）": 1299.98
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 39.16,
+        "coverage_ratio": 33.19662921348315
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "孙伟（汇总）",
+      "leader": "沈晓华",
+      "column": "孙伟（汇总）",
+      "values": {
+        "累计现金流_2026.6.30": -831.31,
+        "PMS预计回款（在途）": 1838.85
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 955.18,
+        "coverage_ratio": 1.9251345296174542
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "接单&运营",
+      "leader": "赵华",
+      "column": "接单&运营",
+      "values": {
+        "累计现金流_2026.6.30": -38.11,
+        "7月现金流预估": 165.9
+      },
+      "rule_id": "cashflow_negative_next_month_improves",
+      "rule_name": "现金流下月预估好转",
+      "risk_level": "attention",
+      "explanation": "报表当月累计现金流为负，但下月现金流预估已好转。",
+      "action": "持续跟进回款，确认下月预估能够兑现。"
+    },
+    {
+      "level": "small_team",
+      "team": "数据",
+      "leader": "沈晓华",
+      "column": "数据",
+      "values": {
+        "累计现金流_2026.6.30": -201.47,
+        "PMS预计回款（在途）": 516.52
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 0.26,
+        "coverage_ratio": 1986.6153846153845
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "智能商圈",
+      "leader": "赵华",
+      "column": "智能商圈",
+      "values": {
+        "累计现金流_2026.6.30": -607.7,
+        "7月现金流预估": 253.45
+      },
+      "rule_id": "cashflow_negative_next_month_improves",
+      "rule_name": "现金流下月预估好转",
+      "risk_level": "attention",
+      "explanation": "报表当月累计现金流为负，但下月现金流预估已好转。",
+      "action": "持续跟进回款，确认下月预估能够兑现。"
+    },
+    {
+      "level": "small_team",
+      "team": "点餐平台",
+      "leader": "赵华",
+      "column": "点餐平台",
+      "values": {
+        "累计现金流_2026.6.30": -754.15,
+        "PMS预计回款（在途）": 2423.06
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 785.58,
+        "coverage_ratio": 3.084421701163471
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "自动化营销",
+      "leader": "沈晓华",
+      "column": "自动化营销",
+      "values": {
+        "累计现金流_2026.6.30": -1385.21,
+        "PMS预计回款（在途）": 1547.45
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 1520.06,
+        "coverage_ratio": 1.0180190255647803
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "菜单&凌霄",
+      "leader": "张浩",
+      "column": "菜单&凌霄",
+      "values": {
+        "累计现金流_2026.6.30": -892.34,
+        "PMS预计回款（在途）": 1782.14
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 399.06,
+        "coverage_ratio": 4.46584473512755
+      }
+    },
+    {
+      "level": "small_team",
+      "team": "钱知麟（汇总）",
+      "leader": "赵华",
+      "column": "钱知麟（汇总）",
+      "values": {
+        "累计现金流_2026.6.30": -1664.53,
+        "PMS预计回款（在途）": 7671.48
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 665.84,
+        "coverage_ratio": 11.521506668268652
+      }
+    },
+    {
+      "level": "sub_team",
+      "team": "前端创新",
+      "leader": "沈晓华",
+      "column": "前端创新汇总",
+      "values": {
+        "累计现金流_2026.6.30": -304.01,
+        "PMS预计回款（在途）": 1816.5
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 39.42,
+        "coverage_ratio": 46.080669710806696
+      }
+    },
+    {
+      "level": "sub_team",
+      "team": "线上运营",
+      "leader": "赵华",
+      "column": "线上运营",
+      "values": {
+        "累计现金流_2026.6.30": -1839.77,
+        "7月现金流预估": 150.3
+      },
+      "rule_id": "cashflow_negative_next_month_improves",
+      "rule_name": "现金流下月预估好转",
+      "risk_level": "attention",
+      "explanation": "报表当月累计现金流为负，但下月现金流预估已好转。",
+      "action": "持续跟进回款，确认下月预估能够兑现。"
+    },
+    {
+      "level": "sub_team",
+      "team": "营销中台",
+      "leader": "沈晓华",
+      "column": "营销中台",
+      "values": {
+        "累计现金流_2026.6.30": -1785.35,
+        "PMS预计回款（在途）": 3077.84
+      },
+      "rule_id": "pms_in_transit_can_cover_cashflow_gap",
+      "rule_name": "PMS在途单可覆盖现金流缺口",
+      "risk_level": "attention",
+      "explanation": "PMS在途单金额足以覆盖下月现金流预估缺口，完成回款后有机会缓解现金流压力；如果仅略高于缺口，现金流转正仍有较大挑战。",
+      "action": "团队与业务Owner严格追踪在途单回款情况。",
+      "details": {
+        "cashflow_gap": 1910.78,
+        "coverage_ratio": 1.6107767508556716
+      }
+    }
+  ],
+  "llm_insights": [
+    {
+      "team": "自动化营销",
+      "leader": "沈晓华",
+      "risk_level": "high",
+      "cashflow_analysis": "截至6月30日累计现金流为-1,385.21 千元，7月预估进一步降至-1,520.06 千元，缺口扩大。PMS在途金额1,547.45 千元仅略高于下月预估缺口1,520.06 千元（高出约2%），两者基本持平，现金流转正挑战较大。团队需与业务Owner严格追踪在途单回款情况。",
+      "order_analysis": "当前考虑2倍奖金的在途回款差距为-1,673.88 千元，低于应有进度，10月底前出单进度落后，今年目标存在风险。需与业务Owner沟通确认后续出单计划。"
+    },
+    {
+      "team": "PH点餐",
+      "leader": "赵华",
+      "risk_level": "high",
+      "cashflow_analysis": "截至6月30日累计现金流为-1,129.05 千元，7月预估收窄至-389.19 千元，缺口缩小。PMS在途金额2,808.36 千元理论上可覆盖下月预估缺口，团队需与业务Owner严格追踪在途单回款情况。",
+      "order_analysis": "当前考虑2倍奖金的在途回款差距为-397.12 千元，符合当前阶段出单计划，今年目标风险不大，团队按计划继续出单。"
+    },
+    {
+      "team": "K点餐",
+      "leader": "赵华",
+      "risk_level": "high",
+      "cashflow_analysis": "截至6月30日累计现金流为-1,042.06 千元，7月预估收窄至-740.27 千元，缺口缩小。PMS在途金额1,249.92 千元理论上可覆盖下月预估缺口，团队需与业务Owner严格追踪在途单回款情况。",
+      "order_analysis": "当前考虑2倍奖金的在途回款差距为-1,668.14 千元，低于应有进度，10月底前出单进度落后，今年目标存在风险。需与业务Owner沟通确认后续出单计划。"
+    }
+  ]
+}

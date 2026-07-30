@@ -723,7 +723,8 @@ def _add_worst_rankings(body_elements, data, cf_data, mapping):
         "margin": "0px 0px 4px 0px",
     })
     body_elements.append(_kpi_card_row(
-        [_risk_card(t, v, l, "现金流") for t, v, l in cf_ranked[:3]]
+        [_risk_card(team, value, leader, "现金流")
+         for team, value, leader in cf_ranked[:3]]
     ))
 
     # ── Row 2: 差距最大前3 ────────────────────────────────────────────
@@ -734,7 +735,8 @@ def _add_worst_rankings(body_elements, data, cf_data, mapping):
         "margin": "12px 0px 4px 0px",
     })
     body_elements.append(_kpi_card_row(
-        [_risk_card(t, v, l, "gap") for t, v, l in gap_ranked[:3]]
+        [_risk_card(team, value, leader, "gap")
+         for team, value, leader in gap_ranked[:3]]
     ))
 
     ranked_teams = []

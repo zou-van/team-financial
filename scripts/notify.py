@@ -1096,7 +1096,7 @@ def _send_card(path, open_id, dry_run=False):
 
     result = subprocess.run(
         cmd, capture_output=True, text=True, timeout=30,
-        cwd=BASE_DIR,
+        cwd=BASE_DIR, check=False,
     )
     try:
         data = json.loads(result.stdout)
@@ -1143,7 +1143,7 @@ def main():
         prev_data = parse_md(prev_file)
         print(f"   上月数据: {prev_file.name} ({len(prev_data)} 个指标)")
     else:
-        print(f"   ⚠️ 上月数据缺失，环比无法计算")
+        print("   ⚠️ 上月数据缺失，环比无法计算")
     print()
 
     out_dir = BASE_DIR / ".cards"
@@ -1184,7 +1184,7 @@ def main():
 
     if not send:
         print()
-        print(f"发送: python scripts/notify.py --send [--dry-run]")
+        print("发送: python scripts/notify.py --send [--dry-run]")
 
 
 if __name__ == "__main__":

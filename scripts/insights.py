@@ -4,13 +4,11 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-
-import yaml
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 BASE_DIR = SCRIPT_DIR.parent
@@ -19,7 +17,7 @@ KNOWLEDGE_FILE = BASE_DIR / "knowledge-graph.yaml"
 OUTPUT_FILE = DATA_DIR / "knowledge-graph-latest.json"
 
 sys.path.insert(0, str(SCRIPT_DIR))
-from notify import (  # noqa: E402
+from notify import (
     METRIC_GAP_2X,
     METRIC_PMS_RECEIVABLE,
     METRIC_REVENUE_TARGET_2X,
@@ -395,7 +393,7 @@ def generate():
     level_order = {"high": 0, "attention": 1}
     insights.sort(key=lambda item: (level_order.get(item["risk_level"], 9), item["level"], item["team"], item["rule_id"]))
     result = {
-        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "month": month_key,
         "source_file": latest_file.name,
         "cashflow_metric": cashflow_name,
